@@ -1,9 +1,6 @@
 package HTML::LoutParser ; # Documented at the __END__.
 
-# $Id: LoutParser.pm,v 1.23 1999/07/25 14:32:37 root Exp $
-
-# Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
-# May be used/distributed under the same terms as Perl itself.
+# $Id: LoutParser.pm,v 1.25 1999/08/08 15:17:13 root Exp root $
 
 
 require HTML::Parser ;
@@ -11,7 +8,7 @@ use Lout ;
 use Text::Wrap ;
 
 use vars qw( $VERSION @ISA ) ;
-$VERSION = '1.00' ;
+$VERSION = '1.02' ;
 
 @ISA = qw( HTML::Parser ) ;
 
@@ -27,6 +24,7 @@ sub new {
                     -last_table_col => 'F',
                     -table          => 1,
                     -cnp            => 1, # Add @CNP's to <H1> and <H2>.
+                    -verbose        => 0,
                     @_,
                 ) ;
 
@@ -45,12 +43,23 @@ sub new {
     $self->{-ignore_comment} = $arg{-ignore_comment} ;
     $self->{-no_comment}     = $arg{-no_comment} ;
     $self->{-cnp}            = $arg{-cnp} ;
+    $self->{-verbose}        = $arg{-verbose} ;
 
     @{$self->{LIST}}         = () ;
     $self->{CELL}            = 'A' ;
     $self->{TD}              = 0 ;
+    $self->{COUNT}           = 0 ;
+
+    print STDERR "Processing tag: " if $self->{-verbose} ;
 
     bless $self, $class ;
+}
+
+
+sub DESTROY {
+    my $self = shift ;
+
+    print STDERR "\n" if $self->{-verbose} ;
 }
 
 
@@ -125,6 +134,10 @@ sub start {
     my( $self, $tag, $attr, $attrseq, $origtext ) = @_ ;
 
     my $default = 0 ;
+
+    printf STDERR "%08d\b\b\b\b\b\b\b\b", $self->{COUNT} 
+    if $self->{-verbose} and $self->{COUNT} % 8 == 0 ;
+    $self->{COUNT}++ ;
 
     CASE : {
         if( $tag eq 'html' or
@@ -450,6 +463,7 @@ The parser object can be created with several options, e.g.
                 -comment_attr   => 0,
                 -ignore_comment => 0,
                 -no_comment     => 0,
+                -verbose        => 1,
                 ) ;
  
 C<-filename> - If given this string will be output as part of the comment at the
@@ -482,6 +496,8 @@ attributes listed. To have only unhandled tags converted use
 C<-comment_tag =E<gt> 0>. To have no tags output as comments use
 C<-no_comment =E<gt> 1>.
 
+C<-verbose> - If set to 1 output a count of start tags processed to STDOUT.
+
 =head2 EXAMPLES
 
 (See DESCRIPTION.)
@@ -506,19 +522,23 @@ If you have something like "E<lt>IE<gt>thisE<lt>/IE<gt>." it may become "{}@I
 =head1 CHANGES
 
 1999/07/18  First properly documented release. 
+
 1999/07/21  Added @CNP suggested by David Duffy <davidD@qimr.edu.au>. 
+
+1999/07/30  Added -verbose option.
+
+1999/08/08  Changed licence to LGPL.
 
 =head1 AUTHOR
 
-Mark Summerfield. I can be contacted as <mark.summerfield@chest.ac.uk> -
+Mark Summerfield. I can be contacted as <summer@chest.ac.uk> -
 please include the word 'loutparser' in the subject line.
 
 =head1 COPYRIGHT
 
 Copyright (c) Mark Summerfield 1999. All Rights Reserved.
 
-This module may be used/distributed/modified under the same terms as Perl
-itself.
+This module may be used/distributed/modified under the LGPL. 
 
 =cut
 

@@ -1,15 +1,12 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.10 1999/07/28 21:41:52 root Exp $
-
-# Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
-# May be used/distributed under the same terms as Perl itself.
+# $Id: Lout.pm,v 1.11 1999/08/08 15:16:58 root Exp root $
 
 
 use strict ; 
 
 use vars qw( $VERSION %Entity2char ) ;
-$VERSION    = '1.01' ;
+$VERSION    = '1.03' ;
 
 
 my %option = (
@@ -337,17 +334,18 @@ None that I know of!
 1999/07/28  Put %Entity2char in the symbol table so that other perl programs
             can access it, for example lout2html.
 
+1999/08/08  Changed licence to LGPL.
+
 =head1 AUTHOR
 
-Mark Summerfield. I can be contacted as <mark.summerfield@chest.ac.uk> -
+Mark Summerfield. I can be contacted as <summer@chest.ac.uk> -
 please include the word 'lout' in the subject line.
 
 =head1 COPYRIGHT
 
 Copyright (c) Mark Summerfield 1999. All Rights Reserved.
 
-This module may be used/distributed/modified under the same terms as Perl
-itself.
+This module may be used/distributed/modified under the LGPL. 
 
 =cut
 

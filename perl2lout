@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
-# May be used/distributed under the same terms as Perl itself.
+# May be used/distributed under the GPL.
 
-# $Id: perl2lout,v 1.6 1999/07/25 08:51:52 root Exp $
+# $Id: perl2lout,v 1.8 1999/08/08 15:15:55 root Exp root $
 
 use strict ;
 
@@ -12,7 +12,7 @@ use Lout ;
 
 use vars qw( $VERSION ) ;
 
-$VERSION      = '1.02' ;
+$VERSION      = '1.03' ;
 
 my $colour    = 0 ;
 my $tab       = 4 ;
@@ -408,7 +408,7 @@ Linux
 
 =pod LICENSE
 
-Same as Perl
+GPL.
 
 =head1 BUGS
 

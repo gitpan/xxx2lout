@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 
-# $Id: lout2html,v 1.7 1999/07/29 21:42:01 root Exp root $
+# $Id: lout2html,v 1.10 1999/08/08 15:15:55 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
-# May be used/distributed under the same terms as Perl itself.
+# May be used/distributed under the GPL.
 
 use strict ; 
 
@@ -12,7 +12,7 @@ use Lout ;
 use HTML::Entities ;
 
 use vars qw( $VERSION ) ;
-$VERSION    = '1.01-alpha' ;
+$VERSION    = '1.03-alpha' ;
 
 my $Wrapper = 1 ;
 my $Verbose = 1 ;
@@ -41,40 +41,40 @@ my $TILDE   = "\xFF" ;
 
 my %Entity2char = %Lout::Entity2char ;
 delete @Entity2char{'amp', 'gt', 'lt', 'quot'} ;
-$Entity2char{'@Bullet'}      = 'middot' ; 
-$Entity2char{'@CDot'}        = 'middot' ; 
-$Entity2char{'@Char bullet'} = 'middot' ;
+@Entity2char{'@Bullet', '@CDot', '@Char bullet'} = split ' ', 'middot ' x 3 ; 
 $Entity2char{'@TradeMark'}   = 'trade' ; 
 
 my %Char2entity = map { 
         $Entity2char{$_} =~ s/[{}]//go ;
         $Entity2char{$_} =~ /^\@Char/o ? ( $Entity2char{$_}, "&" . "$_;" ) : () ; 
     } keys %Entity2char ;
-$Char2entity{'@Char oe'}             = 'oe' ;
-$Char2entity{'@Char OE'}             = 'OE' ;
-$Char2entity{'@Char fi'}             = 'fi' ;
-$Char2entity{'@Char fl'}             = 'fl' ;
-$Char2entity{'@Char florin'}         = 'f' ;
-$Char2entity{'@Char dagger'}         = '+' ;
-$Char2entity{'@Char quotesinglbase'} = ',' ;
-$Char2entity{'@Char quotedblbase'}   = '"' ;
-$Char2entity{'@Char quotedblleft'}   = '"' ;
-$Char2entity{'@Char quotedblright'}  = '"' ;
-$Char2entity{'@Char quoteright'}     = "'" ;
-$Char2entity{'@Char endash'}         = '-' ;
-$Char2entity{'@Char emdash'}         = '--' ;
-$Char2entity{'@Char daggerdbl'}      = '++' ;
-$Char2entity{'@Char ellipsis'}       = '...' ;
-$Char2entity{'@Char fraction'}       = '/' ;
-$Char2entity{'@Char backslash'}      = '\\' ;
+
+%Char2entity = ( 
+    %Char2entity,
+    '@Char oe'              => 'oe',
+    '@Char OE'              => 'OE',
+    '@Char fi'              => 'fi',
+    '@Char fl'              => 'fl',
+    '@Char florin'          => 'f',
+    '@Char dagger'          => '+',
+    '@Char quotesinglbase'  => ',',
+    '@Char quotedblbase'    => '"',
+    '@Char quotedblleft'    => '"',
+    '@Char quotedblright'   => '"',
+    '@Char quoteright'      => "'",
+    '@Char endash'          => '-',
+    '@Char emdash'          => '--',
+    '@Char daggerdbl'       => '++',
+    '@Char ellipsis'        => '...',
+    '@Char fraction'        => '/',
+    '@Char backslash'       => '\\',
+    ) ;
 
 my %Id2entity = map { 
         $Entity2char{$_} !~ /^\@Char/o ? ( $Entity2char{$_}, "&" . "$_;" ) : () ; 
     } keys %Entity2char ;
 
 undef %Entity2char ;
-
-my %Id ;
 
 my $Colour  = join "|", qw( 
                 darkred     red     lightred
@@ -112,13 +112,20 @@ my $Arg     = join "|", qw(
                 ) ;
 
 my $AtArg   = join "|", qw(
-                Location Label 
+                Location Label RunningTitle
+                InitialFont InitialBreak InitialSpace InitialLanguage
+                PageOrientation PageHeaders FirstPageNumber ColumnNumber
+                OptimizePages Unpaginated
+                ContentsGoesHere
+                CoverSheet ContentsSeparate AbstractDisplay
                 ) ;
+
+my %Id ;
+
 
 # These must be in the symbol table.
 use vars qw( $Time $Date $Sec $Min $Hour $Mday $Month $Year ) ;
 
-my @Pending = () ;
 
 # main
 
@@ -180,6 +187,8 @@ __EOT__
 sub parse {
     
     my @list    = () ;
+    my @pending = () ;
+    my $brace   = 0 ;
     my $heading = '1' ;
     my $i       = 0 ;
 
@@ -188,7 +197,7 @@ sub parse {
     $_ = &esc_lout( $_ ) ;
 
     while( my( $token, $value ) = &getok ) {
-        printf STDERR "%08d\b\b\b\b\b\b\b\b", $i if $i % 16 == 0 and $Verbose ;
+        printf STDERR "%08d\b\b\b\b\b\b\b\b", $i if $Verbose and $i % 16 == 0 ;
         $i++ ;
 
         CASE : {
@@ -216,12 +225,10 @@ sub parse {
                     if( $value eq '@FullWidthRule' or
                         $value eq '@NP'
                         ) {
-                        &poptag( '</CENTER>', '</I>', '</B>', '</U>' ) ; 
                         print "\n<HR>\n" ;
                         last ID ;
                     }
                     if( $value =~ /^\@[LDP]P$/o ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         print "\n<P>\n" ;
                         last ID ;
                     }
@@ -233,96 +240,90 @@ sub parse {
                         $value eq '@Report'   or
                         $value eq '@Appendix'
                         ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         $heading = '1' ;
                         last ID ;
                     }
                     if( $value eq '@Section' or
                         $value eq '@SubAppendix'
                         ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         $heading = '2' ;
                         last ID ;
                     }
                     if( $value eq '@SubSection'     or
                         $value eq '@SubSubAppendix'
                         ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         $heading = '3' ;
                         last ID ;
                     }
                     if( $value eq '@SubSubSection' or
                         $value eq '@Theorem'
                         ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         $heading = '4' ;
                         last ID ;
                     }
                     if( $value eq '@Title' ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         print "\n<H$heading>" ;
-                        push @Pending, "</H$heading>\n" ;
+                        push @pending, "</H$heading>\n" ;
                         $heading = '1' ;
                         last ID ;
                     }
-                    if( $value eq '@Heading' ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
+                    if( $value eq '@Heading' or
+                        $value eq '@Caption'
+                        ) {
                         print "\n<H3>" ;
-                        push @Pending, "</H3>\n" ;
+                        push @pending, "</H3>\n" ;
                         last ID ;
                     }
                     if( $value eq '@Verbatim' ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         print "\n<PRE>" ;
-                        push @Pending, "</PRE>\n" ;
+                        push @pending, "\n</PRE>\n" ;
                         last ID ;
                     }
                     if( $value =~ /\@(Foot|Left|Right)Note/o ) {
                         print "\n[<I>Note:</I> " ;
-                        push @Pending, "]\n" ;
+                        push @pending, "]\n" ;
                         last ID ;
                     }
                     if( $value eq '@Tag' ) {
                         print "\n[<I>Tag:</I> " ;
-                        push @Pending, "]\n" ;
+                        push @pending, "]\n" ;
                         last ID ;
                     }
                     if( $value eq '@CD' or 
                         $value eq '@CentredDisplay' ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         print "\n<CENTER>\n" ;
-                        push @Pending, "\n</CENTER>\n" ;
+                        push @pending, "\n</CENTER>\n" ;
                         last ID ;
                     }
                     if( $value =~ /^\@Su([bp])$/o ) {
                         print "\n<SU\U$1>" ;
-                        push @Pending, "</SU\U$1>\n" ;
+                        push @pending, "</SU\U$1>\n" ;
                         last ID ;
                     }
                     if( $value eq '@SysInclude' ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         print "<!-- IGNORED \@SysInclude { $1 } -->\n" 
                         if s/\s*?{\s*?([\S]+?)\s*?}//os ;
                         last ID ;
                     }
                     if( $value eq '@Include' ) {
-                        &poptag( '</I>', '</B>', '</U>' ) ; 
                         print qq{<A HREF="$1">$1</A>\n}
                         if s/\s*?{\s*?([\S]+?)\s*?}//os ;
                         last ID ;
                     }
                     if( $value =~ /\@(BI|[BFI]|Underline|Code)$/o ) {
                         my $type = $1 ;
+                        my $nl = '' ;
                         $type = 'U'    if $type eq 'Underline' ;
                         if( $type eq 'F' or $type eq 'Code' ) {
                             $type = 'TT' ;
-                            # Crude but seems to work OK.
-                            $type = 'PRE' if index( $_, '}' ) > 32 ; 
+                            # Crude but seems to work-ish.
+                            $type = 'PRE', $nl = "\n" if index( $_, '}' ) > 32 ; 
                         }
                         $type = 'B><I' if $type eq 'BI' ;
-                        print "<$type>" ;
+                        print "$nl<$type>" ;
+                        print "\n" if $type eq 'PRE' ;
                         $type = 'I></B' if $type eq 'B><I' ;
-                        push @Pending, "</$type>" ;
+                        push @pending, "$nl</$type>" ;
                         ( $token, $value ) = &getok ;
                         if( $token eq $TEXT ) {
                             $value = &unesc_lout( $value ) ;
@@ -331,13 +332,12 @@ sub parse {
                             # if( $value =~ /(?<!=<A)\s(?!>)/osx ) {
                             #     $value =~ s/(?<!=<A)(\s)(?!>)/<\/$type>$1/osx ;
                             if( $value =~ /[^<][^A]\s[^>]/os ) {
-                                $value =~ s/([^<][^A])\s([^>])/$1<\/$type> $2/os ;
+                                $value =~ s/([^<][^A])\s([^>])/$1$nl<\/$type> $2/os ;
                             }
                             else {
-                                $value .= "</$type>" ;
+                                $value .= "$nl</$type>" ;
                             }
-                            pop @Pending ;
-                            &poptag( "</CENTER>" ) ; 
+                            pop @pending ;
                             print $value ;
                         }
                         else {
@@ -354,7 +354,6 @@ sub parse {
                     }
                     if( $value =~ 
     /\@(Raw)?(Paren)?(UC)?(Numbered|Roman|Alpha|Bullet|Star|Dash)?List/o ) {
-                        &poptag( '</CENTER>', '</I>', '</B>', '</U>' ) ; 
                         my $list = 'OL' ;
                         $list = 'UL' if $value =~ /(Bullet|Star|Dash)/o ;
                         my $type = '1' ;
@@ -371,7 +370,6 @@ sub parse {
                         last ID ;
                     }
                     if( $value =~ /TaggedList/o ) {
-                        &poptag( '</CENTER>', '</I>', '</B>', '</U>' ) ; 
                         print "\n<UL>\n" ;
                         push @list, "\n</UL>\n" ;
                         last ID ;
@@ -388,12 +386,14 @@ sub parse {
                 last CASE ;
             }
             if( $token eq $LBRACE ) {
-                # No action required.
+                $brace++ ;
                 last CASE ;
             }
             if( $token eq $RBRACE ) {
-                &poptag( '</CENTER>', '</I>', '</B>', '</U>' ) ; 
-                print pop @Pending if scalar @Pending ;
+                # We need these strange comments in case we pop up in the
+                # middle of a comment.
+                print "<!-- -->", pop @pending, "<!-- -->" 
+                while scalar @pending and $brace-- ; 
                 last CASE ;
             }
             if( $token eq $TEXT ) {
@@ -409,7 +409,7 @@ sub parse {
         last unless length ;
     }
     print @list    if scalar @list ;
-    print @Pending if scalar @Pending ;
+    print @pending if scalar @pending ;
 }
 
 
@@ -451,6 +451,11 @@ sub esc_lout {
 
     # Delete stuff we can't or don't want to handle.
     s/\b(nohyphen)\b//gos ;
+
+    # Fix some raw lout.
+    # Again we really need negative look ahead and negative look behind...
+    s!//(\d+(\.\d+)?([pf])?)?([^"])!{\@LP}$1!gos ; #"
+    s/\|(\d+(\.\d+)?([pf])?)?([^"])/{\@LP}$1/gos; 
 
     # Comment out or delete args.
     s/^#(.*)$/$ESC$X$1$ESC$Y/gom ;
@@ -518,19 +523,6 @@ sub unesc_lout {
     $_ ;
 }
 
-
-sub poptag {
-
-    foreach my $tag ( @_ ) {
-        my @tag     = grep {     /$tag/o } @Pending ;
-        my @pending = grep { not /$tag/o } @Pending ;
-
-        # We put in these seemingly needless comments as a fudge just in case the
-        # item popped is caught in the middle of an HTML comment.
-        print "<!-- -->", pop @tag, "<!-- -->" if scalar @tag ;
-        @Pending = @pending ;
-    }
-}
 
 sub prepare {
 
@@ -602,6 +594,7 @@ __END__
 @Florin     f
 @Font
 @Format
+@FullWidth
 @High
 @Hour       $Hour
 @ID
@@ -653,13 +646,14 @@ Ignores definitions and macros.
 
 Its slow.
 
-It doesn't cope with all the symbols (yet).
+It doesn't cope with all the symbols.
 
 It does not do tables, diagrams, graphics, etc - and may never do them - see below.
 
 B<It is I<not> a true parser - so it will I<never> get it right.> There is no
 BNF for Lout which means that making a proper parser is `non-trivial'. However,
-C<lout2html> may be sufficient for your needs - at least to do the bulk of the work.
+C<lout2html> may be sufficient for your needs - at least to do the bulk of the 
+conversion work.
 
 =pod SCRIPT CATEGORIES
 
@@ -687,6 +681,6 @@ Linux
 
 =pod LICENSE
 
-Same as Perl
+GPL.
 
 =cut

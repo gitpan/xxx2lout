@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 
-# $Id: html2lout,v 1.11 1999/07/21 19:33:42 root Exp $
+# $Id: html2lout,v 1.14 1999/08/08 15:15:55 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
-# May be used/distributed under the same terms as Perl itself.
+# May be used/distributed under the GPL.
 
 use strict ; 
 
@@ -12,10 +12,11 @@ use Lout ;
 require HTML::LoutParser ;
 
 use vars qw( $VERSION ) ;
-$VERSION         = '1.00' ;
+$VERSION         = '1.02' ;
 
 my $Parser ;
-my $Wrapper      = 1 ;
+my $Wrapper = 1 ;
+my $Verbose = 1 ;
 
 # main
 
@@ -55,6 +56,7 @@ sub prepare {
         's|superscripts=i'      => \$Superscripts,
         't|table=i'             => \$Table,
         'tc|tablecols=i'        => \$TableCols,
+        'v|verbose=i'           => \$Verbose,
         'w|wrapper=i'           => \$Wrapper,
         ) or die "\n" ;
 
@@ -77,6 +79,7 @@ sub prepare {
                 -ignore_comment => $IgnoreComment,
                 -no_comment     => $NoComment,
                 -cnp            => $CNP,
+                -verbose        => $Verbose,
                 ) ;
 }
 
@@ -100,6 +103,7 @@ options:
 -s    --superscripts    Superscripts for 1st, 2nd etc [1]
 -t    --table           Convert tables [1]
 -tc   --tablecols       Num of cols to use in tables [6]
+-v    --verbose         Verbose [$Verbose]
 -w    --wrapper         Wrap text in lout \@Begin..\@End [$Wrapper]
 
 eg: html2lout -ct 0 -tc 5 *.html > out.lt ; lout -s out.lt > out.ps
@@ -144,6 +148,6 @@ Linux
 
 =pod LICENSE
 
-Same as Perl
+GPL.
 
 =cut

@@ -1,4 +1,4 @@
-xxx2lout version 1.11
+xxx2lout version 1.12
 
 SUMMARY
 
@@ -7,8 +7,6 @@ The following little perl programs are included:
 * pod2lout  - Converts pod to lout
 * txt2lout  - Converts plain text to lout
 * perl2lout - Converts perl programs to lout
-
-NEW
 * lout2html - Converts a subset of lout to HTML (alpha!)
 
 
@@ -28,7 +26,9 @@ html2lout (i.e. HTML/LoutParser.pm) now does tables - its very crude and
 simple and you'll probably have to hand tweak, but its a start. 
 
 lout2html is very crude - it doesn't do tables, diagrams, graphics, macros,
-definitions, etc. - but for lots of text and lists it isn't too bad.
+definitions, etc. - but for lots of text and lists it will do the bulk
+conversion, but you'll need to hand fix. I'd really only recommend this for
+the desperate!
 
 Even if they don't give you exactly the results you want they may be enough to
 knock your text into a usable form.
@@ -60,6 +60,9 @@ CHANGES
 1.10    Added lout2html (suggested by David Duffy).
 1.11    Improved lout2html, now handles lout comments, and more tags. Still
         very alpha though.
+1.12    Improved lout2html, more tags, slightly better at braces, but still
+        very alpha.
+1.13    Licence changed to GPL for programs and LGPL for modules.
 
 
 INSTALLING
@@ -88,5 +91,6 @@ These are quick scripts, but if you have comments, improvements etc send them
 to <summer@chest.ac.uk> with 'xxx2lout' in the subject line.
 
 Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
-May be used/distributed under the same terms as Perl itself.
+May be used/distributed under the GPL or LGPL as per the licence in each
+component, or under the GPL where not specified. 
 
