@@ -1,4 +1,4 @@
-xxx2lout version 1.00
+xxx2lout version 1.02
 
 SUMMARY
 
@@ -43,6 +43,12 @@ CHANGES
         commenting of handled and unhandled tags. More tags handled. Parser
         object data bugs sorted. All files now have their own pod
         documentation.
+1.01    Added @CNP as an option '-cnp' for <H1> and <H2>'s which is on by
+        default. Thanks to David Duffy <davidD@qimr.edu.au> for this 
+        suggestion.
+1.02    Added non-standard tags =title, =head3 and =head4 to pod2lout.
+        pod2lout can now be used on perl scripts and modules without formality
+        to produce lout from their pod alone.
 
 
 INSTALLING

@@ -3,7 +3,7 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
 
-# $Id: pod2lout,v 1.7 1999/07/18 11:35:05 root Exp root $
+# $Id: pod2lout,v 1.8 1999/07/25 08:14:54 root Exp $
 
 
 use strict ;
@@ -13,12 +13,13 @@ use Lout ;
 
 use vars qw( $VERSION ) ;
 
-$VERSION         = '1.00' ;
+$VERSION         = '1.02' ;
 
 my $Outfile      = 'STDOUT' ;
 my $Wrapper      = 1 ;
 my $SmartQuotes  = 1 ;
 my $Superscripts = 1 ;
+my $Ignore       = 1 ;
 
 
 &prepare ;
@@ -33,40 +34,63 @@ if( $Outfile ne 'STDOUT' ) {
 my $lino     = 0 ;
 my $newpara  = 0 ;
 my $inlist   = 0 ;
+my $inpod    = 0 ;
 
 while( <> ) {
     $lino++ ;
 
+    if( $Ignore ) {
+        $inpod = 0, next if $inpod and /^=cut/o ;
+        $inpod = 1 if /^=(pod|head|title)/o ;
+        next unless $inpod ;
+    }
+
     if( /^=(\w+)(\s+([^#]+))?(#.*)?$/o ) {
-        my $type = $1 ;
+        my $tag  = $1 ;
         my $text = $3 ? Lout::pod2lout( $3 ) : '' ;
         chomp $text ;
         my $comment = "$4\n" if $4 ;
 
         CASE : {
-            if( $type eq 'pod' or 
-                $type eq 'cut' ) {
+            if( $tag eq 'pod' or 
+                $tag eq 'cut' ) {
                 # Ignore.
                 last CASE ;
             }
-            if( $type eq 'head1' ) {
-                print "\@CentredDisplay { Bold +4p } \@Font {$text}\n" ;
+            if( $tag eq 'title' ) {
+                print "\n\@CentredDisplay { Bold +5p } \@Font { $text }" ;
                 last CASE ;
             }
-            if( $type eq 'head2' ) {
-                print "\@CentredDisplay { Bold +2p } \@Font {$text}\n" ;
+            if( $tag =~ /^head([1-4])/o ) {
+                my $level = $1 ;
+                my( $sign, $size ) = $level > 4 ? 
+                    ( "-" , $level - 4 ) : ( "+" , 5 - $level ) ;
+                $level = $level < 3 ? "\@LP\n\@CNP\n" : '' ;
+                print "\n$level\@CentredDisplay { Bold $sign${size}p }" .
+                      " \@Font { $text }" ;
                 last CASE ;
             }
-            if( $type eq 'over' ) {
-                # Ignore - handled by first =item.
+            if( $tag eq 'over' ) {
+                if( not $inlist ) {
+                    if( $text =~ /^\d/ ) {
+                        print "\@NumberedList\n{" ;
+                        $text = '' ;
+                    }
+                    else {
+                        print "\@BulletList\n{" ;
+                        $text = '' if $text eq '*' ;
+                    }
+                    $inlist++ ;
+                }
+                # else let the first item take care of it
                 last CASE ;
             }
-            if( $type eq 'back' ) {
+            if( $tag eq 'back' ) {
                 $inlist--, print "}" if $inlist ;
                 print "\@EndList\n" ;
                 last CASE ;
             }
-            if( $type eq 'item' ) {
+            if( $tag eq 'item' ) {
                 if( not $inlist ) {
                     if( $text =~ /^\d/ ) {
                         print "\@NumberedList\n" ;
@@ -122,6 +146,7 @@ sub prepare {
     Getopt::Long::config 'no_ignore_case' ;
     GetOptions(
         'h|help'            => \&help,
+        'i|ignore'          => \$Ignore,
         'o|outfile=s'       => \$Outfile,
         'q|smartquotes=i'   => \$SmartQuotes,
         's|superscripts=i'  => \$Superscripts,
@@ -165,12 +190,17 @@ usage: pod2lout [options] <file>
 
 options:
 -h    --help          Print this help screen and exit
+-i    --ignore        Ignore non-pod lines [$Ignore]
 -o F  --outfile F     Write to file F [$Outfile]
 -q    --smartquotes   Smartquotes [$SmartQuotes]
 -s    --superscripts  Superscripts for 1st, 2nd etc [$Superscripts]
 -w    --wrapper       Wrap text in lout \@Begin..\@End [$Wrapper]
 
 e.g. pod2lout -w 0 -s 0 test.pod > test.lt ; lout -s test.lt > test.ps
+e.g. pod2lout module.pm > module.lt ; lout -s module.lt > module.ps
+
+Supports non-standard tags, =title, =head3 and =head4. Does not cope with
+tags which are split over lines.
 __EOT__
     exit ;
 }

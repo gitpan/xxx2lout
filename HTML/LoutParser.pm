@@ -1,6 +1,6 @@
 package HTML::LoutParser ; # Documented at the __END__.
 
-# $Id: LoutParser.pm,v 1.19 1999/07/18 11:20:31 root Exp $
+# $Id: LoutParser.pm,v 1.22 1999/07/24 08:46:08 root Exp $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -26,6 +26,7 @@ sub new {
                     -ignore_comment => 0, # Ignore comments in the HTML.
                     -last_table_col => 'F',
                     -table          => 1,
+                    -cnp            => 1, # Add @CNP's to <H1> and <H2>.
                     @_,
                 ) ;
 
@@ -43,6 +44,7 @@ sub new {
     $self->{-comment_attr}   = $arg{-comment_attr} ;
     $self->{-ignore_comment} = $arg{-ignore_comment} ;
     $self->{-no_comment}     = $arg{-no_comment} ;
+    $self->{-cnp}            = $arg{-cnp} ;
 
     @{$self->{LIST}}         = () ;
     $self->{CELL}            = 'A' ;
@@ -194,7 +196,8 @@ sub start {
             my $level = $1 ;
             my( $sign, $size ) = $level > 4 ? 
                 ( "-" , $level - 4 ) : ( "+" , 5 - $level ) ;
-            print "\n\@CentredDisplay { Bold $sign${size}p } \@Font {" ;
+            $level = $level < 3 ? "\@LP\n\@CNP\n" : '' ;
+            print "\n$level\@CentredDisplay { Bold $sign${size}p } \@Font {" ;
             last CASE ;
         }
         if( $tag eq 'ol' ) {
@@ -503,6 +506,7 @@ If you have something like "E<lt>IE<gt>thisE<lt>/IE<gt>." it may become "{}@I
 =head1 CHANGES
 
 1999/07/18  First properly documented release. 
+1999/07/21  Added @CNP suggested by David Duffy <davidD@qimr.edu.au>. 
 
 =head1 AUTHOR
 

@@ -3,7 +3,7 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
 
-# $Id: perl2lout,v 1.4 1999/07/18 11:20:16 root Exp $
+# $Id: perl2lout,v 1.6 1999/07/25 08:51:52 root Exp root $
 
 use strict ;
 
@@ -12,13 +12,14 @@ use Lout ;
 
 use vars qw( $VERSION ) ;
 
-$VERSION   = '1.00' ;
+$VERSION      = '1.02' ;
 
-my $colour = 0 ;
-my $tab    = 4 ;
-my $font   = 'Courier' ;
-my $size   = 8 ;
-my $number = 0 ;
+my $colour    = 0 ;
+my $tab       = 4 ;
+my $font      = 'Courier' ;
+my $size      = 8 ;
+my $number    = 0 ;
+my $ignorepod = 0 ;
 
 Getopt::Long::config 'no_ignore_case' ;
 GetOptions(
@@ -26,6 +27,7 @@ GetOptions(
     'c|colour|color' => \$colour,
     't|tab=i'        => \$tab,
     'f|font=s'       => \$font,
+    'i|ignorepod=i'  => \$ignorepod,
     'n|number'       => \$number,
     's|size=i'       => \$size,
     ) or die "\n" ;
@@ -41,11 +43,13 @@ my $inpod = 0 ;
 my $lino = 0 ;
 while( <> ) {
     $lino++ ;
-    $inpod = 1 if /^=pod/o or /^=head/ ; 
+    $inpod = 1 if /^=(pod|head|title)/o ; 
     if( $inpod ) {
-        my $pod = Lout::pod2lout( $_ ) ;
-        $pod =~ s/^=(\w+)/\@B{=$1}/o ;
-        print $pod ;
+        if( not $ignorepod ) {
+            my $pod = Lout::pod2lout( $_ ) ;
+            $pod =~ s/^=(\w+)/\@B{=$1}/o ;
+            print $pod ;
+        }
     }
     else {
         &process ;
@@ -140,6 +144,7 @@ options:
 -h    --help            Print this help screen and exit
 -c    --colour --color  Use colour for syntax highlighting [$colour]
 -f F  --font=F          Use lout font F [$font]
+-i    --ignorepod       Ignore pod [$ignorepod]
 -n    --number          Add line numbers [$number]
 -s N  --size=N          Use a font size of N points [$size]
 -t N  --tab=N           Use a tab width of N [$tab]
@@ -410,6 +415,12 @@ Same as Perl
 Applies formating within quoted strings. 
 
 Does not fully format pod - just pod `entities', like EE<gt>gtE<lt>.
+However, this can be worked around thus:
+
+    perl2lout -c -i 0 myscript.pl > myscript.lt
+    pod2lout -w 0 myscript.pl >> myscript.lt
+    # Manually move the @End @Text marker to the end of myscript.lt
+    lout -s myscript.lt > myscript.ps
 
 
 =head1 TODO

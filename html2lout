@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: html2lout,v 1.10 1999/07/18 11:20:16 root Exp $
+# $Id: html2lout,v 1.11 1999/07/21 19:33:42 root Exp $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -40,12 +40,14 @@ sub prepare {
     my $Table         = 1 ;
     my $TableCols     = 6 ;
     my $NoComment     = 0 ;
+    my $CNP           = 1 ;
 
     Getopt::Long::config 'no_ignore_case' ;
     GetOptions(
         'h|help'                => \&help,
         'ct|comment-tag=i'      => \$CommentTag,
         'ca|comment-attr=i'     => \$CommentAttr,
+        'cnp|cond-new-page=i'   => \$CNP,
         'ic|ignore-comment=i'   => \$IgnoreComment,
         'nc|no-comment=i'       => \$NoComment,
         'o|outfile=s'           => \$Outfile,
@@ -74,6 +76,7 @@ sub prepare {
                 -comment_attr   => $CommentAttr,
                 -ignore_comment => $IgnoreComment,
                 -no_comment     => $NoComment,
+                -cnp            => $CNP,
                 ) ;
 }
 
@@ -89,6 +92,7 @@ options:
 -h    --help            Print this help screen and exit
 -ct   --comment-tag     Comment tags [1]
 -ca   --comment-attr    Comment attributes [1]
+-cnp  --cond-new-page   Add \@CNP conditional new page to <H1> and <H2> [1]
 -nc   --no-comment      Do not comment anything [0]
 -ic   --ignore-comment  Ignore comments in the source [0]
 -o F  --outfile F       Write to file F [STDOUT]
