@@ -1,6 +1,6 @@
 package HTML::LoutParser ;
 
-# $Id: LoutParser.pm,v 1.11 1999/07/11 16:24:43 root Exp root $
+# $Id: LoutParser.pm,v 1.13 1999/07/12 21:19:51 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -8,20 +8,49 @@ package HTML::LoutParser ;
 # BUG We don't deal with accented characters and non-breaking spaces very
 #     well. Should copy HTML::Entities::decode and 'loutify' it.
 
-# TODO Cope with tables, <TABLE>, <TR> and <TD>.
+# TODO Cope better with tables.
 # TODO Do &entity; to {@Char entity} translations.
 
 
 require HTML::Parser ;
 use Lout ;
 
-use vars qw( @ISA ) ;
+use vars qw( $VERSION @ISA ) ;
+$VERSION = '0.02' ;
 
 @ISA = qw( HTML::Parser ) ;
 
-my $TOP = "__TOP__" ;
 
 my @List ;
+my $Cell = 'A' ;
+my $Td   = 0 ;
+
+
+sub new {
+    my $class = shift ;
+    my $self  = $class->SUPER::new ;
+    my %arg   = (
+                    -comment_attr   => 1,
+                    -comment_tag    => 1,
+                    -ignore_comment => 0,
+                    -last_table_col => 'H',
+                    -table          => 1,
+                    @_,
+                ) ;
+
+    $self->{-last_table_col} = $arg{-last_table_col} ;
+    if( $self->{-last_table_col} !~ /^[A-Z]$/o ) {
+        $self->{-last_table_col} = uc $self->{-last_table_col} ;
+        $self->{-last_table_col} = 'Z' if $self->{-last_table_col} gt 'A' or 
+                                          $self->{-last_table_col} lt 'Z' ;
+    }
+    $self->{-table}          = $arg{-table} ;
+    $self->{-comment_attr}   = $arg{-comment_attr} ;
+    $self->{-comment_tag}    = $arg{-comment_tag} || $self->{-comment_attr} ;
+    $self->{-ignore_comment} = $arg{-ignore_comment} ;
+
+    $self ;
+}
 
 
 sub start_lout {
@@ -48,6 +77,7 @@ __EOT__
 
 
 sub _to_comment {
+    my $self = shift ;
     my $text = shift ;
 
     $text = HTML::Entities::decode( $text ) ;
@@ -69,14 +99,14 @@ sub text {
 sub declaration {
     my( $self, $decl ) = @_ ;
 
-    print &_to_comment( $decl ) ;
+    print $self->_to_comment( $decl ) if $self->{-comment_tag} ;
 }
 
 
 sub comment {
     my( $self, $comment ) = @_ ;
 
-    print &_to_comment( $comment ) ;
+    print $self->_to_comment( $comment ) unless $self->{-ignore_comment} ;
 }
 
 
@@ -84,7 +114,14 @@ sub start {
     my( $self, $tag, $attr, $attrseq, $origtext ) = @_ ;
     # $attr is reference to a HASH, $attrseq is reference to an ARRAY
 
+    my $default = 0 ;
+
     CASE : {
+        if( $tag eq 'img' ) {
+            my $alt = $$attr{'alt'} ;
+            print $self->_to_comment( "Image $alt" ) if defined $alt ;
+            last CASE ;
+        }
         if( $tag eq 'hr' ) {
             print "\@LLP \@FullWidthRule \@LLP\n" ;
             last CASE ;
@@ -112,7 +149,8 @@ sub start {
             last CASE ;
         }
         if( $tag =~ /^[au]$/o ) {
-            print "\@Underline {" ;
+            my $name = $$attr{'name'} || '' ;
+            print "\@Underline {$name" ;
             last CASE ;
         }
         if( $tag eq 'sup' ) {
@@ -175,6 +213,10 @@ sub start {
             print "\@LP\n" ;
             last CASE ;
         }
+        if( $tag eq 'br' ) {
+            print "\@LLP\n" ;
+            last CASE ;
+        }
         if( $tag eq 'font' ) {
             my $name  = $$attr{'face'}  || '' ;
             $name = 'Helvetica' if $name eq 'sans-serif' ;
@@ -186,22 +228,69 @@ sub start {
                 $size = $2 ;
             }
             print "{ $name $sign${size}p } \@Font {" ;
+            last CASE ;
+        }
+        if( $self->{-table} and $tag eq 'table' ) {
+            # BUG All attributes are ignored.
+            print "\@Tbl\n  rule { yes }\n{\n" ;
+            last CASE ;
+        }
+        if( $self->{-table} and $tag eq 'tr' ) {
+            # BUG All attributes are ignored.
+            # BUG We have no idea how many columns there will be...
+            print '}' while $Td-- > 0; 
+            print "\n\@Row\n  format { " ;
+            for my $cell ( A..$self->{-last_table_col} ) {
+                print "\@Cell $cell " ;
+                print $cell eq $self->{-last_table_col} ? '}' : '| ' ;
+            }
+            print "\n" ;
+            $Cell = 'A' ;
+            $Td   = 0 ;
+            last CASE ;
+        }
+        if( $self->{-table} and ( $tag eq 'td' or $tag eq 'th' ) ) {
+            # BUG All attributes are ignored.
+            $Td--, print '}' if $Td ; 
+            print "$Cell {" ;
+            $Cell++ ;
+            $Td++ ;
+            last CASE ;
         }
         DEFAULT : {
-            my $attr_str = '' ;
-            foreach my $key ( keys %$attr ) {
-                $attr_str .= ", ($key=>$$attr{$key})" ;
-            }
-            $attr_str =~ s/^, //o ;
-            print &_to_comment( "start " . $tag . $attr_str ) ;
+            print $self->_to_comment( "start $tag" . 
+                  $self->_show_attributes( $attr ) ) if $self->{-comment_tag} ;
+            $default = 1 ;
             last CASE ;
         }
     }
+    print $self->_to_comment( "start $tag" . $self->_show_attributes( $attr ) ) 
+    if $self->{-comment_tag} and not $default ;
+}
+
+
+sub _show_attributes {
+    my $self = shift ;
+    my $attr = shift ;
+
+    my $attr_str = '' ;
+    if( $self->{-comment_attr} ) {
+        foreach my $key ( keys %$attr ) {
+            next if $key =~ /^[-_]/o ;
+            $attr_str .= ", ($key=>$$attr{$key})" ;
+        }
+        $attr_str =~ s/^, //o ;
+        $attr_str = ' attributes= ' . $attr_str if $attr_str ;
+    }
+
+    $attr_str ;
 }
 
 
 sub end {
     my( $self, $tag, $origtext ) = @_ ;
+
+    my $default = 0 ;
 
     CASE : {
         if( $tag eq 'p' ) {
@@ -224,6 +313,22 @@ sub end {
             print "}\n" ;
             last CASE ;
         }
+        if( $self->{-table} and $tag eq 'table' ) {
+            print '}' while $Td-- > 0; 
+            print "}\n" ;
+            last CASE ;
+        }
+        if( $self->{-table} and $tag eq 'tr' ) {
+            print '}' while $Td-- > 0; 
+            $Td = 0 ;
+            print "\n" ;
+            last CASE ;
+        }
+        if( $self->{-table} and ( $tag eq 'td' or $tag eq 'th' ) ) {
+            print "}\n" ;
+            $Td-- ;
+            last CASE ;
+        }
         if( $tag =~ /^[ou]l$/o ) {
             if( $List[$#List] > 0 ) {
                 print "}\n" ;
@@ -235,10 +340,13 @@ sub end {
             last CASE ;
         }
         DEFAULT : {
-            print &_to_comment( "end " . $tag ) ; 
+            print $self->_to_comment( "end " . $tag ) if $self->{-comment_tag} ; 
+            $default = 1 ;
             last CASE ;
         }
     }
+    print $self->_to_comment( "end " . $tag ) 
+    if $self->{-comment_tag} and not $default ;
 }
 
 

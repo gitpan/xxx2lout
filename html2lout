@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: html2lout,v 1.5 1999/07/11 17:07:44 root Exp $
+# $Id: html2lout,v 1.6 1999/07/12 21:20:01 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -14,43 +14,63 @@ use Lout ;
 require HTML::LoutParser ;
 
 use vars qw( $VERSION ) ;
-$VERSION         = '0.02' ;
+$VERSION         = '0.04' ;
 
-
-my $Outfile      = 'STDOUT' ;
-my $SmartQuotes  = 1 ;
-my $Superscripts = 1 ;
+my $Html2lout ;
 my $Wrapper      = 1 ;
 
 # main
 
-&process_args ;
-if( $Outfile ne 'STDOUT' ) {
-    open OUT, ">$Outfile" or die "Failed to open $Outfile: $!\n" ;
-    select( OUT ) ;
-}
-my $html2lout = HTML::LoutParser->new ;
-$html2lout->start_lout if $Wrapper ;
+&prepare ;
+$Html2lout->start_lout if $Wrapper ;
 while( <> ) {
-    $html2lout->parse( $_ ) ;
+    $Html2lout->parse( $_ ) ;
 }
-$html2lout->eof ;
-$html2lout->end_lout if $Wrapper ;
+$Html2lout->eof ;
+$Html2lout->end_lout if $Wrapper ;
 
 
-sub process_args {
+sub prepare {
+
+    # Change these in &help if changed here.
+    my $Outfile       = 'STDOUT' ;
+    my $CommentTag    = 1 ;
+    my $CommentAttr   = 1 ;
+    my $IgnoreComment = 0 ;
+    my $SmartQuotes   = 1 ;
+    my $Superscripts  = 1 ;
+    my $Table         = 1 ;
+    my $TableCols     = 8 ;
 
     Getopt::Long::config 'no_ignore_case' ;
     GetOptions(
-        'h|help'            => \&help,
-        'o|outfile=s'       => \$Outfile,
-        'q|smartquotes=i'   => \$SmartQuotes,
-        's|superscripts=i'  => \$Superscripts,
-        'w|wrapper'         => \$Wrapper,
+        'h|help'                => \&help,
+        'ct|comment-tag=i'      => \$CommentTag,
+        'ca|comment-attr=i'     => \$CommentAttr,
+        'ic|ignore-comment=i'   => \$IgnoreComment,
+        'o|outfile=s'           => \$Outfile,
+        'q|smartquotes=i'       => \$SmartQuotes,
+        's|superscripts=i'      => \$Superscripts,
+        't|table=i'             => \$Table,
+        'tc|tablecols=i'        => \$TableCols,
+        'w|wrapper'             => \$Wrapper,
         ) or die "\n" ;
 
     Lout::set_txt2lout( -smart_quotes, $SmartQuotes ) ;
     Lout::set_txt2lout( -superscripts, $Superscripts ) ;
+
+    if( $Outfile ne 'STDOUT' ) {
+        open OUT, ">$Outfile" or die "Failed to open $Outfile: $!\n" ;
+        select( OUT ) ;
+    }
+
+    $Html2lout = HTML::LoutParser->new(
+                        -table          => $Table,
+                        -last_table_col => chr( ord( '@' ) + $TableCols ),
+                        -comment_tag    => $CommentTag,
+                        -comment_attr   => $CommentAttr,
+                        -ignore_comment => $IgnoreComment,
+                        ) ;
 }
 
 
@@ -62,11 +82,23 @@ This is free software you can use/modify it under the same terms as perl.
 usage: html2lout [options] <files>
 
 options:
--h    --help          Print this help screen and exit
--o F  --outfile F     Write to file F [$Outfile]
--q    --smartquotes   Smartquotes [$SmartQuotes]
--s    --superscripts  Superscripts for 1st, 2nd etc [$Superscripts]
--w    --wrapper       Wrap text in lout \@Begin..\@End [$Wrapper]
+-h    --help            Print this help screen and exit
+-ct   --comment-tag     Comment tags [1]
+-ca   --comment-attr    Comment attributes [1]
+-ic   --ignore-comment  Ignore comments in the source [0]
+-o F  --outfile F       Write to file F [STDOUT]
+-q    --smartquotes     Smartquotes [1]
+-s    --superscripts    Superscripts for 1st, 2nd etc [1]
+-t    --table           Convert tables [1]
+-tc   --tablecols       Num of cols to use in tables [8]
+-w    --wrapper         Wrap text in lout \@Begin..\@End [$Wrapper]
+
+Options are switched on with a 1 and off with a 0, e.g. '-s 0'. 
+NB if -ca is on then -ct will be on.
+NB Table conversion will almost always need hand correction but may be
+worth using for a start; if you switch it off '-t 0' the content of
+the table will still be converted into lout so the text will be there
+for you to put in a table manually.
 __EOT__
     exit ;
 }
