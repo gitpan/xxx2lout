@@ -1,4 +1,4 @@
-xxx2lout version 1.18
+xxx2lout version 1.19
 
 SUMMARY
 
@@ -96,6 +96,8 @@ CHANGES
 1999/09/06  Please don't use v 1.17 (I broke lout2html and Lout.pm) - use 1.16
             or earlier or this version (1.18) or later.
             Apart from fixing, have also done some small efficiency improvements.
+
+1999/09/11  Minor corrections.
 
 
 INSTALLING
