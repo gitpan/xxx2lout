@@ -1,4 +1,4 @@
-xxx2lout version 1.19
+xxx2lout version 1.20
 
 SUMMARY
 
@@ -8,7 +8,6 @@ The following little perl programs are included:
 * txt2lout  - Converts plain text to lout
 * perl2lout - Converts perl programs to lout
 * lout2html - Converts a subset of lout to HTML (alpha!)
-* mkall     - Wrapper for calling lout
 
 
 They are supported by two modules which can be used by perl programmers doing
@@ -88,8 +87,8 @@ CHANGES
         SCENE[ Name of scene | lout-file.lt ]
         which is somewhat more compact and (unlike lout defs) has no
         dependency issues since its pure textual substitution. To use this
-        you'll need to pick up my Macro package which is in the same place as
-        this package.
+        you'll need to pick up my MacroScript package which is in the same
+        place as this package.
 
 1999/09/05  Minor corrections to pod2lout. Minor fixes.
 
@@ -98,6 +97,11 @@ CHANGES
             Apart from fixing, have also done some small efficiency improvements.
 
 1999/09/11  Minor corrections.
+
+1999/09/19  Dropped mkall from the tarball since I'm making it too specific to
+            my own needs.
+
+1999/11/15  Minor changes for CPAN.
 
 
 INSTALLING
@@ -118,7 +122,7 @@ somewhere on your path to the xxx2lout scripts you want.
 Note: You must have Perl 5.004 or later; and to use html2lout you must have
 HTML::Parser and to use lout2html you must have HTML::Entities both of which
 come in the libwww-perl library; you'll also need Text::Wrap which comes with
-Perl. To use the macro facility in mkall you will need my Macro package.
+Perl. To use the macro facility in mkall you will need my MacroScript package.
 
 LICENCE
 

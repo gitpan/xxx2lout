@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: txt2lout,v 1.14 1999/09/04 17:43:44 root Exp $
+# $Id: txt2lout,v 1.15 1999/11/15 20:16:13 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -142,31 +142,36 @@ __EOT__
 __END__
 
 
-=pod SCRIPT CATEGORIES
+=head1 NAME
 
-Lout
+txt2lout - convert plain text to lout
 
-=pod DESCRIPTION
+=head1 README
 
-Converts plain text to Lout
+txt2lout - convert plain text to lout
 
-=pod PREREQUISITES
-
-Pragmas:
+=head1 PREREQUISITES
 
 C<strict>
-
-Modules:
 
 C<Getopt::Long>
 C<Lout>
 
-=pod OSNAMES
+=head1 COREQUISITES
 
-Linux
+=head1 COPYRIGHT
 
-=pod LICENSE
+Copyright (c) Mark Summerfield 1999. All Rights Reserved.
+May be used/distributed under the GPL.
+Email <summer@chest.ac.uk> with 'txt2lout' in the subject line.
 
-GPL.
+=head1 OSNAMES
+
+any
+
+=head1 SCRIPT CATEGORIES
+
+Lout
+Text-processing
 
 =cut

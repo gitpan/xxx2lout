@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: lout2html,v 1.13 1999/09/11 11:09:35 root Exp root $
+# $Id: lout2html,v 1.14 1999/11/15 20:16:13 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -643,6 +643,15 @@ __END__
 
 =pod
 
+=head1 NAME
+
+lout2html
+
+=head1 DESCRIPTION
+
+Converts a subset of Lout to HTML -- it does a very basic job which needs hand
+correction - only for the desperate!
+
 =head1 BUGS
 
 If identifiers don't start with @ they will not be detected.
@@ -662,32 +671,38 @@ BNF for Lout which means that making a proper parser is `non-trivial'. However,
 C<lout2html> may be sufficient for your needs - at least to do the bulk of the 
 conversion work.
 
-=pod SCRIPT CATEGORIES
 
-Lout
+=head1 README
 
-=pod DESCRIPTION
+Converts a subset of Lout to HTML -- it does a very basic job which needs hand
+correction - only for the desperate!
 
-Converts a subset of Lout to HTML 
+=head1 PREREQUISITES
 
-=pod PREREQUISITES
+C<strict> 
 
-Pragmas:
-
-C<strict>
-
-Modules:
+C<integer>
 
 C<Getopt::Long>
 C<Lout>
-C<HTML::Entities> 
+C<HTML::Entities>
 
-=pod OSNAMES
+=head1 COREQUISITES
 
-Linux
+=head1 COPYRIGHT
 
-=pod LICENSE
+Copyright (c) Mark Summerfield 1999. All Rights Reserved.
+May be used/distributed under the GPL.
+Email <summer@chest.ac.uk> with 'lout2html' in the subject line.
 
-GPL.
+=head1 OSNAMES
+
+any
+
+=head1 SCRIPT CATEGORIES
+
+Lout
+Text-processing
 
 =cut
+

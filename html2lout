@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: html2lout,v 1.14 1999/08/08 15:15:55 root Exp $
+# $Id: html2lout,v 1.15 1999/11/15 20:16:13 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -122,32 +122,42 @@ __EOT__
 __END__
 
 
-=pod SCRIPT CATEGORIES
+=head1 NAME
 
-Lout
+html2lout
 
-=pod DESCRIPTION
+=head1 DESCRIPTION
 
 Converts HTML to Lout
 
-=pod PREREQUISITES
+=head1 README
 
-Pragmas:
+Converts HTML to Lout
 
-C<strict>
+=head1 PREREQUISITES
 
-Modules:
+C<strict> 
 
 C<Getopt::Long>
 C<Lout>
 C<HTML::LoutParser>
 
-=pod OSNAMES
+=head1 COREQUISITES
 
-Linux
+=head1 COPYRIGHT
 
-=pod LICENSE
+Copyright (c) Mark Summerfield 1999. All Rights Reserved.
+May be used/distributed under the GPL.
+Email <summer@chest.ac.uk> with 'html2lout' in the subject line.
 
-GPL.
+=head1 OSNAMES
+
+any
+
+=head1 SCRIPT CATEGORIES
+
+Lout
+Text-processing
 
 =cut
+

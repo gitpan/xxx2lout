@@ -3,7 +3,7 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
 
-# $Id: perl2lout,v 1.9 1999/09/05 12:04:41 root Exp $
+# $Id: perl2lout,v 1.10 1999/11/15 20:16:13 root Exp root $
 
 use strict ;
 
@@ -381,34 +381,13 @@ ARGV
 use
 __END__
 
+=head1 NAME
 
-=pod SCRIPT CATEGORIES
+perl2lout - convert perl programs to Lout for printing
 
-Lout
+=head1 README
 
-=pod DESCRIPTION
-
-Converts HTML to Lout
-
-=pod PREREQUISITES
-
-Pragmas:
-
-C<strict>
-
-Modules:
-
-C<Getopt::Long>
-C<Lout>
-C<HTML::LoutParser>
-
-=pod OSNAMES
-
-Linux
-
-=pod LICENSE
-
-GPL.
+perl2lout - convert perl programs to Lout for printing
 
 =head1 BUGS
 
@@ -427,4 +406,29 @@ However, this can be worked around thus:
 
 Index variables, $scalar, @array and %hash; plus subroutines.
 
+=head1 PREREQUISITES
+
+C<strict>
+
+C<Getopt::Long>
+C<Lout>
+
+=head1 COREQUISITES
+
+=head1 COPYRIGHT
+
+Copyright (c) Mark Summerfield 1999. All Rights Reserved.
+May be used/distributed under the GPL.
+Email <summer@chest.ac.uk> with 'perl2lout' in the subject line.
+
+=head1 OSNAMES
+
+any
+
+=head1 SCRIPT CATEGORIES
+
+Lout
+Text-processing
+
 =cut
+

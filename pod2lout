@@ -3,7 +3,7 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
 
-# $Id: pod2lout,v 1.12 1999/09/05 12:04:41 root Exp $
+# $Id: pod2lout,v 1.13 1999/11/15 20:16:13 root Exp root $
 
 
 use strict ;
@@ -220,31 +220,37 @@ __EOT__
 __END__
 
 
-=pod SCRIPT CATEGORIES
+=head1 NAME
 
-Lout
+pod2lout - convert pod to lout
 
-=pod DESCRIPTION
+=head1 README
 
-Converts pod to Lout
+pod2lout - convert pod to lout
 
-=pod PREREQUISITES
-
-Pragmas:
+=head1 PREREQUISITES
 
 C<strict>
-
-Modules:
 
 C<Getopt::Long>
 C<Lout>
 
-=pod OSNAMES
+=head1 COREQUISITES
 
-Linux
+=head1 COPYRIGHT
 
-=pod LICENSE
+Copyright (c) Mark Summerfield 1999. All Rights Reserved.
+May be used/distributed under the GPL.
+Email <summer@chest.ac.uk> with 'pod2lout' in the subject line.
 
-GPL.
+=head1 OSNAMES
+
+any
+
+=head1 SCRIPT CATEGORIES
+
+Lout
+Text-processing
 
 =cut
+
