@@ -1,6 +1,6 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.11 1999/08/08 15:16:58 root Exp root $
+# $Id: Lout.pm,v 1.11 1999/08/08 15:16:58 root Exp $
 
 
 use strict ; 

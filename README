@@ -1,4 +1,4 @@
-xxx2lout version 1.12
+xxx2lout version 1.13
 
 SUMMARY
 
@@ -8,6 +8,7 @@ The following little perl programs are included:
 * txt2lout  - Converts plain text to lout
 * perl2lout - Converts perl programs to lout
 * lout2html - Converts a subset of lout to HTML (alpha!)
+* mkall     - Wrapper for lout
 
 
 They are supported by two modules which can be used by perl programmers doing
@@ -63,6 +64,7 @@ CHANGES
 1.12    Improved lout2html, more tags, slightly better at braces, but still
         very alpha.
 1.13    Licence changed to GPL for programs and LGPL for modules.
+1.14    Added mkall lout wrapper.
 
 
 INSTALLING

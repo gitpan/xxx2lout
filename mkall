@@ -1,0 +1,165 @@
+#!/usr/bin/perl -w
+
+# $Id: mkall,v 1.2 1999/08/12 21:44:53 root Exp root $
+
+# Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
+# May be used/distributed under the GPL.
+
+
+use strict ;
+
+use Getopt::Long ;
+
+use vars qw( $VERSION ) ;
+$VERSION = '0.02' ;
+
+my %Opt ;
+
+
+# main
+
+&getoptions ;
+
+{
+    my $Time = time ;
+
+    if( $Opt{'convert'} ) {
+        foreach my $src ( <*> ) {
+            my $dst ;
+            ( $dst = $src ) =~ s/\.(txt|pod|html?)$/.lt/o ;
+            next unless defined $1 ;
+            system "${1}2lout -w 0 $src > $dst" 
+            if ( not -e $dst ) or (stat( $dst ))[9] < (stat( $src ))[9] ;
+        }
+    }
+
+    unlink <*.l[id]> if $Opt{'preclear'} ;
+
+    my $i = 0 ;
+    print STDERR "Lout pass  " if $Opt{'verbose'} ;
+
+    my $error = $Opt{'error'} eq 'STDERR' ? '' : "-e $Opt{'error'}" ;
+    my $all   = -e $Opt{'output'} ? $Opt{'output'} : 'all' ;
+
+    while( $Opt{'runs'}-- ) { 
+        $i++, print STDERR "\b$i" if $Opt{'verbose'} ;
+
+        system "lout $error $Opt{'lout'} $all > $Opt{'output'}.ps" ; 
+    }
+
+    system "ps2pdf $Opt{'output'}.ps $Opt{'output'}.pdf &" if $Opt{'pdf'} ;
+    if( $Opt{'zip'} ) {
+        unlink "$Opt{'output'}.ps.gz" ;
+        system "gzip -9 $Opt{'output'}.ps &" ;
+    }
+
+    unlink <*.l[id]>     if $Opt{'postclear'} ;
+    unlink $Opt{'error'} if $Opt{'error'} ne 'STDERR' and 
+                            $Opt{'postclear'} and 
+                            -z $Opt{'error'} ; 
+    
+    $error = ( ( not -e $Opt{'error'} ) or ( -z $Opt{'error'} ) ) ? 
+                '' : " - Errors remain in $Opt{'error'}" ;
+
+    if( $Opt{'verbose'} ) {
+        $Time = time - $Time ;
+        my( $s, $m, $h ) = (gmtime( $Time ))[0..2] ;
+        printf STDERR "\b\bes took %02d:%02d:%02d$error\n", $h, $m, $s ;
+    }
+}
+
+
+# subroutines
+
+sub getoptions {
+
+    # Defaults.
+    $Opt{'convert'}     = 0 ;
+    $Opt{'error'}       = 'lout.err' ;
+    $Opt{'lout'}        = '-a' ;
+    $Opt{'output'}      = 'all' ;
+    $Opt{'pdf'}         = 0 ;
+    $Opt{'preclear'}    = 1 ;
+    $Opt{'postclear'}   = 1 ;
+    $Opt{'runs'}        = 6 ;
+    $Opt{'verbose'}     = 1 ;
+    $Opt{'zip'}         = 1 ;
+
+    &help if defined $ARGV[0] and $ARGV[0] =~ /^(-h|--help)$/o ;
+
+    Getopt::Long::config 'no_ignore_case' ;
+    GetOptions( \%Opt,
+        'convert|t=i',
+        'error|e=s',
+        'lout|l=s',
+        'output|o=s',
+        'pdf|P=i',
+        'preclear|c=i',
+        'postclear|C=i',
+        'runs|r=i', 
+        'source|s=s',
+        'verbose|v=i',
+        'zip|z=i',
+        ) or &help ;
+}
+
+
+sub help {
+
+    print STDERR <<__EOT__ ;
+
+mkall v $VERSION. Copyright (c) Mark Summerfield 1999. All rights reserved.
+May be used/distributed under the GPL.
+
+usage: mkall [options] 
+
+options: (use the short or long name followed by the parameter)
+-c --preclear  b  Clear index files before runs [$Opt{'preclear'}]
+-C --postclear b  Clear index files after runs [$Opt{'postclear'}]
+-e --error     s  Error file or STDERR [$Opt{'error'}]
+-h --help      b  Show this screen and exit
+-l --lout      s  Lout options, e.g. "-U -s" ["$Opt{'lout'}"]
+-o --output    s  Output filename (excl. suffix) [$Opt{'output'}]
+-r --runs      i  Number of lout runs to perform [$Opt{'runs'}]
+                  (Set this to zero to just clear index files)
+-t --convert   i  Convert .pod, .txt and .html files to .lt [$Opt{'convert'}]
+-P --pdf       b  Create .pdf file [$Opt{'pdf'}]
+-v --verbose   b  Verbose [$Opt{'verbose'}]
+-z --zip       i  Convert .ps to .ps.gz [$Opt{'zip'}]
+
+b = boolean 1 = true, 0 = false; i = integer; s = string e.g. filename
+
+e.g. #1 (no options are required): mkall
+e.g. #2: mkall -e STDERR -r 5 -P 1 -l "-s -a"
+__EOT__
+    exit ;
+}
+
+
+=pod SCRIPT CATEGORIES
+
+Lout
+
+=pod DESCRIPTION
+
+Wrapper for lout
+
+=pod PREREQUISITES
+
+Pragmas:
+
+C<strict>
+
+Modules:
+
+C<Getopt::Long>
+
+=pod OSNAMES
+
+Linux
+
+=pod LICENSE
+
+GPL.
+
+=cut

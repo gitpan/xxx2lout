@@ -1,6 +1,6 @@
 package HTML::LoutParser ; # Documented at the __END__.
 
-# $Id: LoutParser.pm,v 1.25 1999/08/08 15:17:13 root Exp root $
+# $Id: LoutParser.pm,v 1.25 1999/08/08 15:17:13 root Exp $
 
 
 require HTML::Parser ;

@@ -3,7 +3,7 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
 
-# $Id: pod2lout,v 1.10 1999/08/08 15:15:55 root Exp root $
+# $Id: pod2lout,v 1.10 1999/08/08 15:15:55 root Exp $
 
 
 use strict ;
