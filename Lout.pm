@@ -1,13 +1,27 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.17 1999/09/06 17:59:45 root Exp $
-
+# $Id: Lout.pm,v 1.19 2000/01/24 22:42:28 root Exp root $
 
 use strict ; 
 
-use vars qw( $VERSION %Entity2char ) ;
-$VERSION = '1.14' ;
+use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS
+             %Entity2char %Char2entity ) ;
+$VERSION = '1.15' ;
 
+use Exporter() ;
+
+@ISA       = qw( Exporter ) ;
+
+@EXPORT_OK = qw( txt2lout pod2lout htmlentity2lout set_option 
+                 %Entity2char %Char2entity 
+                 ) ;
+
+%EXPORT_TAGS = ( 
+    ALL   => [ qw( txt2lout pod2lout htmlentity2lout set_option 
+                   %Entity2char %Char2entity ) ],
+    Func  => [ qw( txt2lout pod2lout htmlentity2lout set_option ) ],
+    Hash  => [ qw( %Entity2char %Char2entity ) ],
+    ) ;
 
 my %option = (
         -html           => 0,
@@ -129,7 +143,42 @@ my %option = (
     iquest  => '{@Char questiondown}',     # '¿',
     'times' => '{@Multiply}',              # '×',    # times is a keyword in perl
     divide  => '{@Divide}',                # '÷',
-) ;
+    ) ;
+
+
+{
+    my %entity2char = %Entity2char ;
+
+    delete @entity2char{'amp', 'gt', 'lt', 'quot'} ;
+    @entity2char{'@Bullet', '@CDot', '@Char bullet'} = split ' ', 'middot ' x 3 ; 
+    $entity2char{'@TradeMark'} = 'trade' ; 
+
+    %Char2entity = map { 
+            $entity2char{$_} =~ s/[{}]//go ;
+            $entity2char{$_} =~ /^\@Char/o ? ( $entity2char{$_}, "&" . "$_;" ) : () ; 
+        } keys %entity2char ;
+}
+
+%Char2entity = ( 
+    %Char2entity,
+    '@Char oe'              => 'oe',
+    '@Char OE'              => 'OE',
+    '@Char fi'              => 'fi',
+    '@Char fl'              => 'fl',
+    '@Char florin'          => 'f',
+    '@Char dagger'          => '+',
+    '@Char quotesinglbase'  => ',',
+    '@Char quotedblbase'    => '"',
+    '@Char quotedblleft'    => '"',
+    '@Char quotedblright'   => '"',
+    '@Char quoteright'      => "'",
+    '@Char endash'          => '-',
+    '@Char emdash'          => '--',
+    '@Char daggerdbl'       => '++',
+    '@Char ellipsis'        => '...',
+    '@Char fraction'        => '/',
+    '@Char backslash'       => '\\',
+    ) ;
 
 
 my $AT          = "\x00" ;
@@ -141,14 +190,12 @@ my $QRIGHT      = "\x05" ;
 my $PARA        = "\x06" ;
 my $PLACE       = "\x07" ;
 
-
 sub set_option {
     my( $key, $value ) = @_ ;
     
     $option{$key}      = $value ;
     $option{-verbatim} = 0 if $option{-html} ;
 }
-
 
 sub htmlentity2lout {
     
@@ -159,7 +206,6 @@ sub htmlentity2lout {
 
     $lout ;
 }
-
 
 sub txt2lout {
     local $_ = shift ;
@@ -246,7 +292,6 @@ sub txt2lout {
     $_ ;
 }
 
-
 sub pod2lout {
     local $_ = shift ;
 
@@ -271,9 +316,7 @@ sub pod2lout {
     $_ ;
 }
 
-
 1 ;
-
 
 __END__
 
@@ -294,6 +337,19 @@ Lout.pm - Module providing txt2lout, htmlentity2lout and pod2lout functions
     foreach $html ( @html ) {
         $lout .= Lout::txt2lout( $html ) ;
     }
+
+
+    use Lout qw( txt2lout pod2lout htmlentity2lout set_option ) ;
+    # or
+    use Lout qw( :Func ) ;
+    # Import the names into your namespace
+
+    use Lout qw( %Entity2char %Char2entity ) ;
+    # or
+    use Lout qw( :Hash ) ;
+    # Use the predefined hashes - they are *not* inversions of each other
+
+    use Lout qw( :ALL ) ; # Import the lot.
 
 =head1 DESCRIPTION
 
@@ -346,6 +402,26 @@ translation use my C<pod2lout> program.
 (This sets the options used by C<Lout::txt2lout> and C<Lout::htmlentity2lout>
 as described above.)
 
+=head2 %Entity2char
+
+This hash is keyed by entity name (excluding leading & and trailing ;) and
+provides the lout equivalent, e.g.
+
+    $Entity2char{'amp'}     eq '&' ;
+    $Entity2char{'copy'}    eq '{@CopyRight}' ;
+    $Entity2char{'nbsp'}    eq '~' ;
+    $Entity2char{'ccedil'}  eq '{@Char ccedilla}' ;
+    $Entity2char{'frac12'}  eq '{@Char onehalf}' ;
+
+=head2 %Char2entity
+
+This has is keyed by lout name (excluding braces) and provides the HTML
+equivalent, e.g.
+
+    $Char2entity{'@Char fi'}    eq 'fi' ;
+    $Char2entity{'@Bullet'}     eq '&middot;' ;
+    $Char2entity{'@Yen'}        eq '&yen;' ;
+
 =head2 EXAMPLES
 
 (See DESCRIPTION.)
@@ -367,15 +443,17 @@ None that I know of!
 
 1999/09/04  Tiny improvement.
 
+2000/01/24  Now use exporter so you can import the functions in to your name
+            space. Added %Char2entity hash.
 
 =head1 AUTHOR
 
-Mark Summerfield. I can be contacted as <summer@chest.ac.uk> -
+Mark Summerfield. I can be contacted as <summer@perlpress.com> -
 please include the word 'lout' in the subject line.
 
 =head1 COPYRIGHT
 
-Copyright (c) Mark Summerfield 1999. All Rights Reserved.
+Copyright (c) Mark Summerfield 1999-2000. All Rights Reserved.
 
 This module may be used/distributed/modified under the LGPL. 
 

@@ -1,0 +1,297 @@
+#!/usr/bin/perl -w
+
+# $Id: xml2lout,v 1.6 2000/01/26 20:36:32 root Exp root $
+
+# Copyright (c) 2000 Mark Summerfield. All Rights Reserved.
+# May be used/distributed under the GPL.
+
+use strict ; 
+
+use Getopt::Long ;
+use Lout qw( txt2lout ) ;
+use Symbol ;
+use Text::Wrap qw( wrap $columns ) ;
+use XML::Parser ;
+
+use vars qw( $VERSION ) ;
+$VERSION   = '0.04' ;
+
+my $SUFFIX = '\\.[xX][mM][lL]$' ;
+my $INDENT = '    ' ;
+
+my %Opt ;               # User preferences (see getoptions)
+my $Parser = XML::Parser->new( Style => 'Stream' ) ;
+my $Fh     = gensym ;   # The lout file we're writing to
+my %Attrib = () ;       # The tag attributes: tagname => hash of attribute names
+my $Buffer = '' ;       # Line buffer
+my $Indent = 0 ;        # Indentation level
+my $File   = '' ;       # The xml file we're processing
+
+# main
+
+&getoptions ;
+
+foreach my $file ( @ARGV ) {
+    eval {
+        die "Skipping   $file\n" unless $file =~ /$SUFFIX/o ;
+        my $lout = $File = $file ;
+        $lout =~ s/$SUFFIX/$Opt{'lout'}/o ;
+        print STDERR "Converting $File to $lout\n" if $Opt{'verbose'} ;
+        open $Fh, ">$lout" or die "Failed to open $lout: $!\n" ;
+        $Parser->parsefile( $File ) ;
+        close $Fh or die "Failed to close $lout: $!\n" ;
+        &def ; 
+    } ;
+    warn $@ if $@ ;
+}
+
+
+sub StartDocument {
+
+    my( $d, $m, $y ) = (localtime( time ))[3..5] ;
+    $y += 1900 ; $m++ ; 
+    $m = "0$m" if $m < 10 ; 
+    $d = "0$d" if $d < 10 ;
+ 
+    print $Fh <<__EOT__ ;
+\@SysInclude { tbl }
+\@SysInclude { doc }
+# Converted from $File by xml2lout on $y/$m/$d.
+__EOT__
+
+    if( $Opt{'def'} =~ /^[12]$/o ) {
+        my $file = $File ;
+        $file =~ s/$SUFFIX/-def/o ;
+        $file =~ s,.*/,,o ;
+        print $Fh "\@Include { $file }\n" ;
+    }
+    elsif( $Opt{'def'} ) {
+        print $Fh "\@Include { $Opt{'def'} }\n" ;
+    }
+
+    print $Fh "\@Doc \@Text \@Begin\n" ;
+}
+
+
+sub EndDocument {
+
+    print $Fh "\@End \@Text\n" ;
+}
+
+
+sub StartTag {
+    my( $self, $tagtype ) = @_ ;
+
+    my $tagname = &normalise( $tagtype ) ;
+    my $indent  = $INDENT x $Indent++ ;
+
+    print $Fh "$indent$tagname\n" ;  
+    $Attrib{$tagname} = undef if $Opt{'def'} ; 
+
+    if( $Opt{'attr'} ) {
+        while( my( $attrib, $value ) = each %_ ) {
+            $attrib = &normalise( $attrib ) ;
+            print $Fh "$indent${INDENT}$attrib { $value }\n" ;
+            $Attrib{$tagname}{$attrib} = undef if $Opt{'def'} ; 
+        }
+    }
+
+    print $Fh "$indent" . "{\n" ;
+}
+
+
+sub EndTag {
+    my( $self, $tagtype ) = @_ ;
+
+    my $indent = $INDENT x --$Indent ;
+    print $Fh "/\n$Buffer\n$indent}\n/\n" ;
+    $Buffer = '' ;
+}
+
+
+sub Text {
+    
+    s/^\s+// ; # Eliminate ignorable whitespace
+    s/\s+$// ;
+
+    if( $Opt{'wrap'} ) {
+        tr/\n/ / ;
+        $_ = wrap( '', '', $_ ) ;
+    }
+
+    $Buffer .= txt2lout( $_ ) ;
+}
+
+
+sub def {
+
+    my $file = $File ;
+    $file =~ s/$SUFFIX/-def/o ;
+
+    if( $Opt{'def'} eq '1' and -e $file ) {
+        print STDERR "Leaving    $file\n" if $Opt{'verbose'} ;
+        return ;
+    }
+    elsif( $Opt{'def'} =~ /^[12]$/o ) {
+        print STDERR "Creating   $file\n" if $Opt{'verbose'} ;
+    }
+    else {
+        return ; # Haven't been asked to generate def file
+    }
+
+    my $fh = gensym ;
+    eval {
+        open $fh, ">$file" or die "Failed to open $file: $!\n" ;
+        foreach my $tag ( sort { lc $a cmp lc $b } keys %Attrib ) {
+            if( defined %{$Attrib{$tag}} and $Opt{'attr'} ) {
+                print $fh "def $tag\n" ;
+                foreach my $attr ( sort { lc $a cmp lc $b } keys %{$Attrib{$tag}} ) {
+                    print $fh "${INDENT}named $attr {}\n" ;
+                } 
+                print $fh "${INDENT}right x\n{\n\@Tbl\n" .
+                          "${INDENT}rule { single }\n" .
+                          "${INDENT}aformat { \@Cell A | \@Cell B }\n{\n" ;
+                foreach my $attr ( sort { lc $a cmp lc $b } keys %{$Attrib{$tag}} ) {
+                    my $attrname = $attr ;
+                    $attrname =~ s/^\Q$Opt{'prefix'}//o ;
+                    print $fh "${INDENT}\@Rowa A { \@I $attrname } B { $attr }\n" ;
+                }
+                print $fh "}\n\@LLP\nx\n\@LP\n}\n\n" ;
+            }
+            else {
+                print $fh "def $tag right x { x \@LP }\n\n" ;
+            }
+        }
+        close $fh or die "Failed to close $file: $!\n" ;
+    } ;
+    warn $@ if $@ ;
+}
+
+
+sub normalise {
+    local $_ = shift ;
+
+    tr/\@A-Za-z//cd ; 
+    $_ = $Opt{'prefix'} . $_ ;
+
+    $_ ;
+}
+
+
+sub getoptions {
+
+    # Defaults.
+    $Opt{'attr'}    = 1 ;
+    $Opt{'def'}     = 1 ;
+    $Opt{'indent'}  = $INDENT ;
+    $Opt{'lout'}    = '.lt' ;
+    $Opt{'prefix'}  = '@xml' ;
+    $Opt{'quotes'}  = 1 ;
+    $Opt{'super'}   = 1 ;
+    $Opt{'tex'}     = 1 ;
+    $Opt{'verbose'} = 1 ; 
+    $Opt{'wrap'}    = 0 ;
+
+    Getopt::Long::config 'no_ignore_case' ; 
+    GetOptions( \%Opt,
+        'attr|a=i',
+        'def|d=s',
+        'help|h',
+        'indent|i=s',
+        'lout|l=s',
+        'prefix|p=s',
+        'quotes|q=i',
+        'super|s=i',
+        'tex|t=i',
+        'verbose|v',
+        'wrap|w=i',
+        ) or die "$!\nxml2lout -h for help\n" ;
+
+    &help if $Opt{'help'} or not @ARGV ;
+
+    Lout::set_option( -smartquotes  => $Opt{'quotes'} ) ;
+    Lout::set_option( -superscripts => $Opt{'super'}  ) ;
+
+    $columns = $Opt{'wrap'} if $Opt{'wrap'} ; # $columns is from Text::Wrap
+
+    $INDENT ||= $Opt{'indent'} ;
+    $INDENT = '' unless $Opt{'tex'} ;
+
+#    print STDERR map { "$_=[$Opt{$_}]\n" } keys %Opt ; exit ; # DEBUG
+}
+
+
+sub help {
+    print <<__EOT__ ;
+
+xml2lout v $VERSION. Copyright (c) Mark Summerfield 2000. 
+All rights reserved. May be used/distributed under the GPL.
+
+usage: xml2lout [options] <file(s)>
+
+-a  --attr     output attributes [$Opt{'attr'}]
+-d  --def      filename = use \@Include{filename} [$Opt{'def'}]
+               0 = assume \@Include{mydefs}
+               1 = create file-def with std defs for each file, 
+               2 = same as 1 but overwrites an existing file-def
+-i  --indent   Indent to use [$Opt{'indent'}]
+-l  --lout     Lout suffix [$Opt{'lout'}]
+-p  --prefix   Prefix for Lout defs [$Opt{'prefix'}]
+-q  --quotes   Smart Quotes [$Opt{'quotes'}]
+-s  --super    Superscripts e.g. for 1st etc [$Opt{'super'}]
+-t  --tex      Tex or nroff spacing [$Opt{'tex'}]
+-w  --wrap     Wrap text at this column (slow) 0 = no wrap [$Opt{'wrap'}]
+-v  --verbose  Verbose [$Opt{'verbose'}]
+
+If you just run xml2lout over an XML file it will generate a def file which
+you can then edit to suit.
+
+__EOT__
+    exit ;
+}
+
+
+__END__
+
+=head1 NAME
+
+xml2lout
+
+=head1 DESCRIPTION
+
+Simple XML to Lout converter
+
+=head1 README
+
+Simple XML to Lout converter
+
+=head1 PREREQUISITES
+
+C<strict> 
+
+C<Getopt::Long>
+C<Lout>
+C<Symbol>
+C<Text::Wrap>
+C<XML::Parser>
+
+=head1 COREQUISITES
+
+=head1 COPYRIGHT
+
+Copyright (c) Mark Summerfield 2000. All Rights Reserved.
+May be used/distributed under the GPL.
+Email <summer@perlpress.com> with 'xml2lout' in the subject line.
+
+=head1 OSNAMES
+
+any
+
+=head1 SCRIPT CATEGORIES
+
+Lout
+Text-processing
+XML
+
+=cut
+

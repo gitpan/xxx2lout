@@ -1,18 +1,18 @@
 #!/usr/bin/perl -w
 
-# $Id: html2lout,v 1.15 1999/11/15 20:16:13 root Exp root $
+# $Id: html2lout,v 1.20 2000/01/24 22:46:15 root Exp root $
 
-# Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
+# Copyright (c) 1999-2000 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
 
 use strict ; 
 
 use Getopt::Long ;
-use Lout ;
+use Lout qw( set_option ) ;
 require HTML::LoutParser ;
 
 use vars qw( $VERSION ) ;
-$VERSION         = '1.02' ;
+$VERSION    = '1.11' ;
 
 my $Parser ;
 my $Wrapper = 1 ;
@@ -28,13 +28,13 @@ while( <> ) {
 $Parser->eof ;
 $Parser->end_lout if $Wrapper ;
 
-
 sub prepare {
 
     # Change these in &help if changed here.
     my $Outfile       = 'STDOUT' ;
     my $CommentTag    = 1 ;
     my $CommentAttr   = 1 ;
+    my $Def           = 1 ;
     my $IgnoreComment = 0 ;
     my $SmartQuotes   = 1 ;
     my $Superscripts  = 1 ;
@@ -49,6 +49,7 @@ sub prepare {
         'ct|comment-tag=i'      => \$CommentTag,
         'ca|comment-attr=i'     => \$CommentAttr,
         'cnp|cond-new-page=i'   => \$CNP,
+        'd|def=i'               => \$Def,
         'ic|ignore-comment=i'   => \$IgnoreComment,
         'nc|no-comment=i'       => \$NoComment,
         'o|outfile=s'           => \$Outfile,
@@ -60,8 +61,8 @@ sub prepare {
         'w|wrapper=i'           => \$Wrapper,
         ) or die "\n" ;
 
-    Lout::set_option( -smartquotes  => $SmartQuotes ) ;
-    Lout::set_option( -superscripts => $Superscripts ) ;
+    set_option( -smartquotes  => $SmartQuotes ) ;
+    set_option( -superscripts => $Superscripts ) ;
 
     if( $Outfile ne 'STDOUT' ) {
         open OUT, ">$Outfile" or die "Failed to open $Outfile: $!\n" ;
@@ -76,6 +77,7 @@ sub prepare {
                 -last_table_col => chr( ord( '@' ) + $TableCols ),
                 -comment_tag    => $CommentTag,
                 -comment_attr   => $CommentAttr,
+                -def            => $Def,
                 -ignore_comment => $IgnoreComment,
                 -no_comment     => $NoComment,
                 -cnp            => $CNP,
@@ -83,11 +85,10 @@ sub prepare {
                 ) ;
 }
 
-
 sub help {
     print <<__EOT__ ;
-html2lout v $VERSION. Copyright (c) Mark Summerfield 1999. All rights reserved.
-This is free software you can use/modify it under the same terms as perl.
+html2lout v $VERSION. Copyright (c) Mark Summerfield 1999-2000. 
+All rights reserved. May be used/distributed under the GPL.
 
 usage: html2lout [options] <files>
 
@@ -96,6 +97,7 @@ options:
 -ct   --comment-tag     Comment tags [1]
 -ca   --comment-attr    Comment attributes [1]
 -cnp  --cond-new-page   Add \@CNP conditional new page to <H1> and <H2> [1]
+-d    --def             Use \@HeaderA etc defs (see HTML::LoutParser pod) [1]
 -nc   --no-comment      Do not comment anything [0]
 -ic   --ignore-comment  Ignore comments in the source [0]
 -o F  --outfile F       Write to file F [STDOUT]
@@ -118,9 +120,7 @@ __EOT__
     exit ;
 }
 
-
 __END__
-
 
 =head1 NAME
 
@@ -146,9 +146,9 @@ C<HTML::LoutParser>
 
 =head1 COPYRIGHT
 
-Copyright (c) Mark Summerfield 1999. All Rights Reserved.
+Copyright (c) Mark Summerfield 1999-2000. All Rights Reserved.
 May be used/distributed under the GPL.
-Email <summer@chest.ac.uk> with 'html2lout' in the subject line.
+Email <summer@perlpress.com> with 'html2lout' in the subject line.
 
 =head1 OSNAMES
 

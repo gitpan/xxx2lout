@@ -1,4 +1,4 @@
-xxx2lout version 1.20
+xxx2lout version 1.33
 
 SUMMARY
 
@@ -7,11 +7,53 @@ The following little perl programs are included:
 * pod2lout  - Converts pod to lout
 * txt2lout  - Converts plain text to lout
 * perl2lout - Converts perl programs to lout
-* lout2html - Converts a subset of lout to HTML (alpha!)
+* xml2lout  - Converts XML to lout (alpha) *NEW*
+* lout2html - Converts a subset of lout to HTML (very alpha!)
+
+Lout is a typesetting language similar in principle to LaTeX and groff, but in
+my view a lot easier to learn and use.
+
+txt2lout can be used as a nice filter, say in vi, with ".,$!txt2lout -w 0" for
+example.
+
+html2lout (i.e. HTML/LoutParser.pm) now does tables - its very crude and
+simple; you'll almost certainly have to hand tweak the output. Its a little
+fragile but does most of the donkey work.
+
+lout2html is very crude - it doesn't do tables, diagrams, graphics, macros,
+definitions, etc. - but for lots of text and lists it will do the bulk
+conversion, but you'll need to hand fix. I'd really only recommend this for
+the desperate!
+
+xml2lout is very simple, basically for each XML tag it creates a lout def like
+this:
+    def @xmlTAGNAME right x { x @LP }
+You can then edit this definition to have each of your tags do whatever you
+want. If your tag has attributes the definition should be something like this:
+    def @xmlTAGNAME 
+        named @xmlATTRIBA {} 
+        named @xmlATTRIBB {} 
+        right x 
+    { 
+    @Tbl 
+        rule { single }
+        aformat { @Cell A | @Cell B }
+    {
+        @Rowa A { @I ATTRIBA } B { @xmlATTRIBA }
+        @Rowa A { @I ATTRIBB } B { @xmlATTRIBB }
+    }
+    @LLP
+    x 
+    @LP
+    }
+In both cases the `x' is the text that comprises the body of the tag (if any).
 
 
-They are supported by two modules which can be used by perl programmers doing
-their own lout processing:
+Even if they don't give you exactly the results you want they may be enough to
+knock your text into a usable form.
+
+The programs are supported by two modules which can be used by perl
+programmers doing their own lout processing:
 * Lout.pm - this provides the txt2lout function used by the first three
             converters, and a supporting set_option function; it also
             provides htmlentity2lout used by html2lout. Its also used by
@@ -19,90 +61,10 @@ their own lout processing:
 * HTML/LoutParser.pm - this provides the routines for the hooks in the 
             HTML/Parser.pm module.
 
-txt2lout can be used as a nice filter, say in vi, with ".,$!txt2lout -w 0" for
-example.
-
-html2lout (i.e. HTML/LoutParser.pm) now does tables - its very crude and
-simple and you'll probably have to hand tweak, but its a start. 
-
-lout2html is very crude - it doesn't do tables, diagrams, graphics, macros,
-definitions, etc. - but for lots of text and lists it will do the bulk
-conversion, but you'll need to hand fix. I'd really only recommend this for
-the desperate!
-
-Even if they don't give you exactly the results you want they may be enough to
-knock your text into a usable form.
 
 CHANGES
 
-0.01    First version.
-0.02    Added some code to handle html tables in html2lout; also made
-        LoutParser a first class object with some parameters to influence
-        its behaviour.
-0.03    Improved html2lout - if multiple fonts given, choses just the last one
-        and inserts Base. Insert empty objects {} in front of @B, @I etc to
-        ensure they don't collide with preceeding words. Corrections to smart
-        quotes applied. Now use Text::Wrap to wrap long lines. Added code to
-        handle more tags.
-1.00    First documented version. Improved html2lout - better table handling 
-        (but still very basic). No longer puts @LP's all over the place, so
-        everything comes out better, including lists. Now &entity;'s are
-        converted to {@Char entity}'s. More options added to control
-        commenting of handled and unhandled tags. More tags handled. Parser
-        object data bugs sorted. All files now have their own pod
-        documentation.
-1.01    Added @CNP as an option '-cnp' for <H1> and <H2>'s which is on by
-        default. Thanks to David Duffy <davidD@qimr.edu.au> for this 
-        suggestion.
-1.02    Added non-standard tags =title, =head3 and =head4 to pod2lout.
-        pod2lout can now be used on perl scripts and modules without formality
-        to produce lout from their pod alone.
-1.10    Added lout2html (suggested by David Duffy).
-1.11    Improved lout2html, now handles lout comments, and more tags. Still
-        very alpha though.
-1.12    Improved lout2html, more tags, slightly better at braces, but still
-        very alpha.
-1.13    Licence changed to GPL for programs and LGPL for modules.
-1.14    Added mkall lout wrapper.
-1.15    Many improvements to mkall - now reads the ,`all' file and converts
-        .txt, .pod or .html files to .lt for each .lt found in an @Include
-        statement in the `all' file. Added -verbatim option to txt2lout so you
-        can now put
-            =lout
-            @MySymbol @PP # etc.
-            =endlout
-        into .txt files, as well as in-line verbatim text such as V<@B> bold,
-        etc.
-1.16    mkall simple `makefile' lout wrapper can now use the macro package.
-        For example, I have a file which has the macro:
-            %DEFINE SCENE
-            @Section
-                @Title {#0}
-            @Begin
-            @PP
-            @Include {#1}
-            @End @Section
-            %END_DEFINE
-        so in my `all' file I can write:
-        SCENE[ Name of scene | lout-file.lt ]
-        which is somewhat more compact and (unlike lout defs) has no
-        dependency issues since its pure textual substitution. To use this
-        you'll need to pick up my MacroScript package which is in the same
-        place as this package.
-
-1999/09/05  Minor corrections to pod2lout. Minor fixes.
-
-1999/09/06  Please don't use v 1.17 (I broke lout2html and Lout.pm) - use 1.16
-            or earlier or this version (1.18) or later.
-            Apart from fixing, have also done some small efficiency improvements.
-
-1999/09/11  Minor corrections.
-
-1999/09/19  Dropped mkall from the tarball since I'm making it too specific to
-            my own needs.
-
-1999/11/15  Minor changes for CPAN.
-
+See separate CHANGES file
 
 INSTALLING
 
@@ -122,14 +84,15 @@ somewhere on your path to the xxx2lout scripts you want.
 Note: You must have Perl 5.004 or later; and to use html2lout you must have
 HTML::Parser and to use lout2html you must have HTML::Entities both of which
 come in the libwww-perl library; you'll also need Text::Wrap which comes with
-Perl. To use the macro facility in mkall you will need my MacroScript package.
+Perl. To use the macro facility in mkall you will need my Text::MacroScript
+package. xml2lout requires some standard modules plus XML::Parser.
 
 LICENCE
 
 These are quick scripts, but if you have comments, improvements etc send them
-to <summer@chest.ac.uk> with 'xxx2lout' in the subject line.
+to <summer@perlpress.com> with 'xxx2lout' in the subject line.
 
-Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
+Copyright (c) 1999-2000 Mark Summerfield. All Rights Reserved.
 May be used/distributed under the GPL or LGPL as per the licence in each
 component, or under the GPL where not specified. 
 

@@ -1,18 +1,17 @@
 #!/usr/bin/perl -w
 
-# $Id: txt2lout,v 1.15 1999/11/15 20:16:13 root Exp root $
+# $Id: txt2lout,v 1.17 2000/01/24 22:46:15 root Exp root $
 
-# Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
+# Copyright (c) 1999-2000 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
 
 use strict ; 
 
 use Getopt::Long ;
-use Lout ;
-
+use Lout qw( txt2lout set_option ) ;
 
 use vars qw( $VERSION ) ;
-$VERSION = '1.03' ;
+$VERSION = '1.05' ;
 
 my %Opt ;
 
@@ -46,12 +45,11 @@ while( <> ) {
         print "\@PP\n$Opt{'extraspace'}" ;
     }
     else {
-        print Lout::txt2lout( $_ ) ;
+        print txt2lout( $_ ) ;
     }
 }
 
 &tail if $Opt{'wrapper'} ;
-
 
 sub process_args {
 
@@ -77,19 +75,19 @@ sub process_args {
         'verbatim|v=i',
         ) or &help ;
 
-    Lout::set_option( -hyphen       => $Opt{'hyphen'} ) ;
-    Lout::set_option( -smart_quotes => $Opt{'smartquotes'} ) ;
-    Lout::set_option( -superscripts => $Opt{'superscripts'} ) ;
-    Lout::set_option( -verbatim     => $Opt{'verbatim'} ) ;
+    set_option( -hyphen       => $Opt{'hyphen'} ) ;
+    set_option( -smart_quotes => $Opt{'smartquotes'} ) ;
+    set_option( -superscripts => $Opt{'superscripts'} ) ;
+    set_option( -verbatim     => $Opt{'verbatim'} ) ;
 
     $Opt{'extraspace'} = $Opt{'extraspace'} ? "\n" : '' ;
 }
 
-
 sub help {
     print <<__EOT__ ;
-txt2lout v $VERSION. Copyright (c) Mark Summerfield 1999. All rights reserved.
-This is free software you can use/modify it under the same terms as perl.
+
+txt2lout v $VERSION. Copyright (c) Mark Summerfield 1999-2000. 
+All rights reserved. May be used/distributed under the GPL.
 
 usage: txt2lout [options] <files>
 
@@ -115,7 +113,6 @@ __EOT__
     exit ;
 }
 
-
 sub head {
  
     my( $d, $m, $y ) = (localtime( time ))[3..5] ;
@@ -131,16 +128,13 @@ sub head {
 __EOT__
 }
 
-
 sub tail {
     print <<__EOT__ ;
 \@End \@Text
 __EOT__
 }
 
-
 __END__
-
 
 =head1 NAME
 
@@ -163,7 +157,7 @@ C<Lout>
 
 Copyright (c) Mark Summerfield 1999. All Rights Reserved.
 May be used/distributed under the GPL.
-Email <summer@chest.ac.uk> with 'txt2lout' in the subject line.
+Email <summer@perlpress.com> with 'txt2lout' in the subject line.
 
 =head1 OSNAMES
 

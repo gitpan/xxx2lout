@@ -3,16 +3,16 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
 
-# $Id: perl2lout,v 1.10 1999/11/15 20:16:13 root Exp root $
+# $Id: perl2lout,v 1.13 2000/01/24 22:46:15 root Exp root $
 
 use strict ;
 
 use Getopt::Long ;
-use Lout ;
+use Lout qw( pod2lout ) ;
 
 use vars qw( $VERSION ) ;
 
-$VERSION      = '1.04' ;
+$VERSION      = '1.06' ;
 
 my $colour    = 0 ;
 my $tab       = 4 ;
@@ -46,7 +46,7 @@ while( <> ) {
     $inpod = 1 if /^=(?:pod|head|title)/o ; 
     if( $inpod ) {
         if( not $ignorepod ) {
-            my $pod = Lout::pod2lout( $_ ) ;
+            my $pod = pod2lout( $_ ) ;
             $pod =~ s/^=(\w+)/\@B{=$1}/o ;
             print $pod ;
         }
@@ -59,14 +59,12 @@ while( <> ) {
 }
 &tail ;
 
-
 sub prepare {
     while( <DATA> ) {
         chomp ;
         $Keyword{$_} = 1 if $_ ;
     }
 }
-
 
 sub head {
     print <<__EOT__ ;
@@ -83,13 +81,11 @@ sub head {
 __EOT__
 }
 
-
 sub tail {
     print <<__EOT__ ;
 \@End \@Text
 __EOT__
 }
-
 
 sub process {
 
@@ -132,11 +128,11 @@ sub process {
     print "$_\n" ;
 }
 
-
 sub help {
     print STDERR <<__EOT__ ;
-perl2lout v $VERSION. Copyright (c) Mark Summerfield 1999. All Rights Reserved.
-May be used/distributed under the same terms as Perl itself.
+
+perl2lout v $VERSION. Copyright (c) Mark Summerfield 1999-2000. 
+All Rights Reserved. May be used/distributed under the GPL.
 
 usage: perl2lout [options] file | lout > file.ps
 
@@ -152,7 +148,6 @@ options:
 __EOT__
     exit ;
 }
-
 
 __DATA__
 case
@@ -401,7 +396,6 @@ However, this can be worked around thus:
     # Manually move the @End @Text marker to the end of myscript.lt
     lout -s myscript.lt > myscript.ps
 
-
 =head1 TODO
 
 Index variables, $scalar, @array and %hash; plus subroutines.
@@ -419,7 +413,7 @@ C<Lout>
 
 Copyright (c) Mark Summerfield 1999. All Rights Reserved.
 May be used/distributed under the GPL.
-Email <summer@chest.ac.uk> with 'perl2lout' in the subject line.
+Email <summer@perlpress.com> with 'perl2lout' in the subject line.
 
 =head1 OSNAMES
 

@@ -1,17 +1,15 @@
 package HTML::LoutParser ; # Documented at the __END__.
 
-# $Id: LoutParser.pm,v 1.28 1999/09/06 18:17:06 root Exp $
-
+# $Id: LoutParser.pm,v 1.31 2000/01/24 22:36:53 root Exp $
 
 require HTML::Parser ;
-use Lout ;
+use Lout qw( htmlentity2lout ) ;
 use Text::Wrap ;
 
 use vars qw( $VERSION @ISA ) ;
-$VERSION = '1.05' ;
+$VERSION = '1.12' ;
 
 @ISA = qw( HTML::Parser ) ;
-
 
 sub new {
     my $class = shift ;
@@ -19,6 +17,7 @@ sub new {
                     -filename       => '',
                     -comment_attr   => 1, # Include attributes in comments.
                     -comment_tag    => 1, # We always comment unhandled tags.
+                    -def            => 1, # Use @HeaderX defs
                     -no_comment     => 0, # Unless we set this.
                     -ignore_comment => 0, # Ignore comments in the HTML.
                     -last_table_col => 'F',
@@ -40,6 +39,7 @@ sub new {
     $self->{-table}          = $arg{-table} ;
     $self->{-comment_tag}    = $arg{-comment_tag} ;
     $self->{-comment_attr}   = $arg{-comment_attr} ;
+    $self->{-def}            = $arg{-def} ;
     $self->{-ignore_comment} = $arg{-ignore_comment} ;
     $self->{-no_comment}     = $arg{-no_comment} ;
     $self->{-cnp}            = $arg{-cnp} ;
@@ -55,13 +55,11 @@ sub new {
     bless $self, $class ;
 }
 
-
 sub DESTROY {
     my $self = shift ;
 
     print STDERR "\n" if $self->{-verbose} ;
 }
-
 
 sub start_lout {
     my $self = shift ;
@@ -76,18 +74,22 @@ sub start_lout {
     print <<__EOT__ ;
 \@SysInclude { tbl }
 \@SysInclude { doc }
+def \@HeaderA right x { \@CD +8p \@Font { x } }
+def \@HeaderB right x { \@CD +6p \@Font { x } }
+def \@HeaderC right x { \@CD +4p \@Font { x } }
+def \@HeaderD right x { \@CD +2p \@Font { x } }
+def \@HeaderE right x { \@CD -1p \@Font { x } }
+def \@HeaderF right x { \@CD -2p \@Font { x } }
 # Created by HTML::LoutParser.pm on $y/$m/$d$file.
 \@Doc \@Text \@Begin
 __EOT__
 }
-
 
 sub end_lout {
     print <<__EOT__ ;
 \@End \@Text
 __EOT__
 }
-
 
 sub _to_comment {
     my $self = shift ;
@@ -103,7 +105,6 @@ sub _to_comment {
     "#$text" ;
 }
 
-
 sub text {
     my( $self, $text ) = @_ ;
    
@@ -112,9 +113,8 @@ sub text {
         $para = wrap( '', '', $text ) ;
     } ;
     $para = $text if $@ ;
-    print Lout::htmlentity2lout( $para ) ;
+    print htmlentity2lout( $para ) ;
 }
-
 
 sub declaration {
     my( $self, $decl ) = @_ ;
@@ -122,13 +122,11 @@ sub declaration {
     print $self->_to_comment( $decl ) if $self->{-comment_tag} ;
 }
 
-
 sub comment {
     my( $self, $comment ) = @_ ;
 
     print $self->_to_comment( $comment ) unless $self->{-ignore_comment} ;
 }
-
 
 sub start {
     my( $self, $tag, $attr, $attrseq, $origtext ) = @_ ;
@@ -149,7 +147,7 @@ sub start {
         }
         if( $tag eq 'img' ) {
             my $img = $$attr{'alt'} || $$attr{'src'} ;
-            print Lout::htmlentity2lout( "[Image `$img']" ) if defined $img ;
+            print htmlentity2lout( "[Image `$img']" ) if defined $img ;
             last CASE ;
         }
         if( $tag eq 'blockquote' ) {
@@ -165,7 +163,7 @@ sub start {
             last CASE ;
         }
         if( $tag eq 'title' ) {
-            print "\n\@CentredDisplay { Bold +5p } \@Font {" ;
+            print "\n\@CentredDisplay { +10p } \@Font {" ;
             last CASE ;
         }
         if( $tag eq 'center' ) {
@@ -188,7 +186,7 @@ sub start {
             last CASE ;
         }
         if( $tag =~ /^[au]$/o ) {
-            print "{}\@Underline {" ; 
+            print "{}\@Underline {" unless $$attr{'name'} ; 
             last CASE ;
         }
         if( $tag eq 'sup' ) {
@@ -207,10 +205,16 @@ sub start {
         }
         if( $tag =~ /^h([1-6])$/o ) {
             my $level = $1 ;
-            my( $sign, $size ) = $level > 4 ? 
-                ( "-" , $level - 4 ) : ( "+" , 5 - $level ) ;
-            $level = $level < 3 ? "\@LP\n\@CNP\n" : '' ;
-            print "\n$level\@CentredDisplay { Bold $sign${size}p } \@Font {" ;
+            if( $self->{-def} ) {
+                $level = chr( ord( '@' ) + $level ) ;
+                print "\n\@Header$level {" ;
+            }
+            else {
+                my( $sign, $size ) = $level > 4 ? 
+                    ( "-" , $level - 4 ) : ( "+" , 5 - $level ) ;
+                $level = $level < 3 ? "\@LP\n\@CNP\n" : '' ;
+                print "\n$level\@CentredDisplay { Bold $sign${size}p } \@Font {" ;
+            }
             last CASE ;
         }
         if( $tag eq 'ol' ) {
@@ -331,17 +335,12 @@ sub start {
     if $self->{-comment_tag} and not $default ;
 }
 
-
 sub end {
     my( $self, $tag, $origtext ) = @_ ;
 
     my $default = 0 ;
 
     CASE : {
-        if( $tag eq 'p' ) {
-            # We ignore this - we put in a @PP at <P> tags.
-            last CASE ;
-        }
         if( $tag eq 'head' or
             $tag eq 'body' or
             $tag eq 'html' or
@@ -349,6 +348,10 @@ sub end {
             $tag eq 'dt'
             ) {
             # No action required.
+            last CASE ;
+        }
+        if( $tag eq 'p' ) {
+            print "\@LLP\n" ;
             last CASE ;
         }
         if( $tag eq 'center'           or 
@@ -407,7 +410,6 @@ sub end {
     if $self->{-comment_tag} and not $default ;
 }
 
-
 sub _show_attributes {
     my $self = shift ;
     my $attr = shift ;
@@ -425,9 +427,7 @@ sub _show_attributes {
     $attr_str ;
 }
 
-
 1 ;
-
 
 __END__
 
@@ -464,6 +464,7 @@ The parser object can be created with several options, e.g.
                 -last_table_col => 'D',
                 -comment_tag    => 0,
                 -comment_attr   => 0,
+                -def            => 0,
                 -ignore_comment => 0,
                 -no_comment     => 0,
                 -verbose        => 1,
@@ -487,6 +488,14 @@ tags will be output.
 
 C<-comment_attr> - If set to 1 (the default) then every tag output as a
 comment will have its attributes listed in the comment too.
+
+C<-def> - If set to 1 (the default) then every <H1> tag will be output as
+@HeaderA, and so on for <H2>..<H6> with the definitions like this in the lout:
+
+    def @HeaderA right x { @CD { +8p @Font { x } } }
+
+Using this is recommended since it will be easier for you to simply change the
+lout definitions to suit your situation.
 
 C<-ignore_comment> - If set to 1 all HTML comments will be ignored; if set to
 0 they will be output as Lout comments.
@@ -521,27 +530,48 @@ in the test files.
 If you have something like "E<lt>IE<gt>thisE<lt>/IE<gt>." it may become "{}@I
 {this} ." I don't know a solution for this one.
 
-
 =head1 CHANGES
 
-1999/07/18  First properly documented release. 
+1999/07/18  
 
-1999/07/21  Added @CNP suggested by David Duffy <davidD@qimr.edu.au>. 
+First properly documented release. 
 
-1999/07/30  Added -verbose option.
+1999/07/21  
 
-1999/08/08  Changed licence to LGPL.
+Added @CNP suggested by David Duffy <davidD@qimr.edu.au>. 
 
-1999/09/04  Tiny fixes.
+1999/07/30  
+
+Added -verbose option.
+
+1999/08/08  
+
+Changed licence to LGPL.
+
+1999/09/04  
+
+Tiny fixes.
+
+2000/01/22  
+
+Now <H1>..<H6> are output as @HeaderA..@HeaderF by default (this can be
+switched off for backward compatibility). This should make it a lot easier to
+change the header style because you only have to change the defs not do global
+search and replaces. Also we now output @LLP when we get </P> tags since this
+seems to improve things a bit.
+
+2000/01/24
+
+Now correctly skip (or output as comments) <A NAME="name"> tags.
 
 =head1 AUTHOR
 
-Mark Summerfield. I can be contacted as <summer@chest.ac.uk> -
+Mark Summerfield. I can be contacted as <summer@perlpress.com> -
 please include the word 'loutparser' in the subject line.
 
 =head1 COPYRIGHT
 
-Copyright (c) Mark Summerfield 1999. All Rights Reserved.
+Copyright (c) Mark Summerfield 1999-2000. All Rights Reserved.
 
 This module may be used/distributed/modified under the LGPL. 
 
