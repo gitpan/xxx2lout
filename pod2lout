@@ -13,13 +13,15 @@ use Lout ;
 
 use vars qw( $VERSION ) ;
 
-$VERSION         = '1.03' ;
+$VERSION         = '1.04' ;
 
 my $Outfile      = 'STDOUT' ;
 my $Wrapper      = 1 ;
 my $SmartQuotes  = 1 ;
 my $Superscripts = 1 ;
 my $Ignore       = 1 ;
+my $Verbatim     = 1 ;
+my $Hyphen       = 1 ;
 
 
 &prepare ;
@@ -146,15 +148,19 @@ sub prepare {
     Getopt::Long::config 'no_ignore_case' ;
     GetOptions(
         'h|help'            => \&help,
+        'hyphen|H=i',       => \$Hyphen,
         'i|ignore'          => \$Ignore,
         'o|outfile=s'       => \$Outfile,
         'q|smartquotes=i'   => \$SmartQuotes,
         's|superscripts=i'  => \$Superscripts,
+        'verbatim|v=i',     => \$Verbatim,
         'w|wrapper=i'       => \$Wrapper,
         ) or die "\n" ;
 
+    Lout::set_option( -hyphen       => $Hyphen ) ;
     Lout::set_option( -smart_quotes => $SmartQuotes ) ;
     Lout::set_option( -superscripts => $Superscripts ) ;
+    Lout::set_option( -verbatim     => $Verbatim ) ;
 }
 
 
@@ -190,10 +196,12 @@ usage: pod2lout [options] <file>
 
 options:
 -h    --help          Print this help screen and exit
+-H    --hyphen        Turn space delimeted - into -- [$Hyphen]
 -i    --ignore        Ignore non-pod lines [$Ignore]
 -o F  --outfile F     Write to file F [$Outfile]
 -q    --smartquotes   Smartquotes [$SmartQuotes]
 -s    --superscripts  Superscripts for 1st, 2nd etc [$Superscripts]
+-v    --verbatim      Treat V<\@Verbatim lout> as literal lout [$Verbatim]
 -w    --wrapper       Wrap text in lout \@Begin..\@End [$Wrapper]
 
 e.g. pod2lout -w 0 -s 0 test.pod > test.lt ; lout -s test.lt > test.ps

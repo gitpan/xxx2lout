@@ -1,19 +1,21 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.11 1999/08/08 15:16:58 root Exp $
+# $Id: Lout.pm,v 1.13 1999/08/29 19:12:04 root Exp root $
 
 
 use strict ; 
 
 use vars qw( $VERSION %Entity2char ) ;
-$VERSION    = '1.03' ;
+$VERSION    = '1.10' ;
 
 
 my %option = (
         -html           => 0,
+        -hyphen         => 0,
         -smartquotes    => 1,
         -superscripts   => 1,
         -tex            => 0,
+        -verbatim       => 1,
         ) ;
 
 # This hash (and most of its comments) is copied from Gisle Aas
@@ -137,22 +139,23 @@ my $ELLIPSIS    = "\x03" ;
 my $QLEFT       = "\x04" ;
 my $QRIGHT      = "\x05" ;
 my $PARA        = "\x06" ;
-# If more are required use pairs, e.g. "\x07\x00" .. "\x07\xFF".
+my $PLACE       = "\x07" ;
 
 
 sub set_option {
     my( $key, $value ) = @_ ;
     
-    $option{$key} = $value ;
+    $option{$key}      = $value ;
+    $option{-verbatim} = 0 if $option{-html} ;
 }
 
 
 sub htmlentity2lout {
     
-    my $html       = $option{-html} ;
-    $option{-html} = 1 ;
-    my $lout       = &txt2lout( shift ) ;
-    $option{-html} = $html ;
+    my $html           = $option{-html} ;
+    $option{-html}     = 1 ;
+    my $lout           = &txt2lout( shift ) ;
+    $option{-html}     = $html ;
 
     $lout ;
 }
@@ -160,6 +163,15 @@ sub htmlentity2lout {
 
 sub txt2lout {
     local $_ = shift ;
+
+    # Verbatim lout in plain text
+    my @verbatim ;
+    if( $option{-verbatim} ) {
+        my $i = 0 ;
+        while( s/V<([^>]+)>/$PLACE$i/os ) {
+            $verbatim[$i++] = $1 ;
+        }
+    }
 
     s/[\n\r]{2,}/$PARA/gos ;
     s/\@/$AT/go ;
@@ -208,6 +220,8 @@ sub txt2lout {
 
     s/(&)/"$1"/go ;
 
+    s/(\s)-(\s)/$1--$2/go if $option{-hyphen} ;
+
     # Fixups
     s/$QLEFT/`/go ;
     s/$QRIGHT/'/go ;
@@ -221,6 +235,13 @@ sub txt2lout {
     s/$AT/"@"/go ;
     s/$LBRACE/{/go ;
     s/$RBRACE/}/go ;
+
+    # Verbatim lout in plain text
+    if( $option{-verbatim} ) {
+        foreach my $verbatim ( 0..$#verbatim ) {
+            s/$PLACE$verbatim/$verbatim[$verbatim]/m ;
+        }
+    }
 
     $_ ;
 }
@@ -249,7 +270,6 @@ sub pod2lout {
 
     $_ ;
 }
-
 
 
 1 ;
@@ -283,7 +303,11 @@ This function converts a plain text string into a string of lout. It is
 influenced by the following options (all of which are set by calling
 C<Lout::set_option> once for each option - defaults are shown):
 
-C<Lout::set_option( -html =E<gt> 0)> - Treat the input as plain text.
+C<Lout::set_option( -html =E<gt> 0)> - Treat the input as plain text; set to 1
+to treat the input as HTML. If on then -verbatim is off.
+
+C<Lout::set_option( -hyphen =E<gt> 0)> - Convert space delimited hyphens to
+lout double hyphens.
 
 C<Lout::set_option( -smartquotes =E<gt> 1)> - Convert single and double quotes
 to `smart' quotes.
@@ -294,6 +318,9 @@ numbers to superscripts, e.g. for 1st, 2nd, 3rd, 4th, etc.
 C<Lout::set_option( -tex =E<gt> 0)> - Convert TeX and LaTeX to @TeX and
 @LaTeX; this assumes that you are using a lout document type which has these
 macros defined. 
+
+C<Lout::set_option( -verbatim =E<gt> 1)> - On for text and pod, off for html.
+Allows V<@Verbatim Lout> in your text to go through unchanged.
 
 =head2 Lout::htmlentity2lout
 
@@ -335,6 +362,9 @@ None that I know of!
             can access it, for example lout2html.
 
 1999/08/08  Changed licence to LGPL.
+
+1999/08/15  Added -hyphen and -verbatim options.
+
 
 =head1 AUTHOR
 

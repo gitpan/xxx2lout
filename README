@@ -1,4 +1,4 @@
-xxx2lout version 1.13
+xxx2lout version 1.16
 
 SUMMARY
 
@@ -8,7 +8,7 @@ The following little perl programs are included:
 * txt2lout  - Converts plain text to lout
 * perl2lout - Converts perl programs to lout
 * lout2html - Converts a subset of lout to HTML (alpha!)
-* mkall     - Wrapper for lout
+* mkall     - Wrapper for calling lout
 
 
 They are supported by two modules which can be used by perl programmers doing
@@ -65,6 +65,32 @@ CHANGES
         very alpha.
 1.13    Licence changed to GPL for programs and LGPL for modules.
 1.14    Added mkall lout wrapper.
+1.15    Many improvements to mkall - now reads the ,`all' file and converts
+        .txt, .pod or .html files to .lt for each .lt found in an @Include
+        statement in the `all' file. Added -verbatim option to txt2lout so you
+        can now put
+            =lout
+            @MySymbol @PP # etc.
+            =endlout
+        into .txt files, as well as in-line verbatim text such as V<@B> bold,
+        etc.
+1.16    mkall simple `makefile' lout wrapper can now use the macro package.
+        For example, I have a file which has the macro:
+            %DEFINE SCENE
+            @Section
+                @Title {#0}
+            @Begin
+            @PP
+            @Include {#1}
+            @End @Section
+            %END_DEFINE
+        so in my `all' file I can write:
+        SCENE[ Name of scene | lout-file.lt ]
+        which is somewhat more compact and (unlike lout defs) has no
+        dependency issues since its pure textual substitution. To use this
+        you'll need to pick up my Macro package which is in the same place as
+        this package.
+
 
 
 INSTALLING
@@ -85,7 +111,7 @@ somewhere on your path to the xxx2lout scripts you want.
 Note: You must have Perl 5.004 or later; and to use html2lout you must have
 HTML::Parser and to use lout2html you must have HTML::Entities both of which
 come in the libwww-perl library; you'll also need Text::Wrap which comes with
-Perl.
+Perl. To use the macro facility in mkall you will need my Macro package.
 
 LICENCE
 

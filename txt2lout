@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: txt2lout,v 1.12 1999/08/08 15:15:55 root Exp $
+# $Id: txt2lout,v 1.13 1999/08/15 09:52:37 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -12,53 +12,77 @@ use Lout ;
 
 
 use vars qw( $VERSION ) ;
-$VERSION         = '1.01' ;
+$VERSION = '1.03' ;
 
-my $Outfile      = 'STDOUT' ;
-my $Wrapper      = 1 ;
-my $SmartQuotes  = 1 ;
-my $Superscripts = 1 ;
-my $ExtraSpace   = 0 ;
+my %Opt ;
 
 # main
 
 &process_args ;
-if( $Outfile ne 'STDOUT' ) {
-    open OUT, ">$Outfile" or die "Failed to open $Outfile: $!\n" ;
+
+if( $Opt{'outfile'} ne 'STDOUT' ) {
+    open OUT, ">$Opt{'outfile'}" or die "Failed to open $Opt{'outfile'}: $!\n" ;
     select( OUT ) ;
 }
 
-&head if $Wrapper ;
+&head if $Opt{'wrapper'} ;
+
+my $verbatim = 0 ;
 
 while( <> ) {
-    if( /^\s*$/o ) {
+    if( $verbatim ) {
+        if( /^=endlout/o ) {
+            $verbatim = 0 ;
+        }
+        else {
+            print ;
+        }
+    }
+    elsif( /^=lout/o ) {
+        $verbatim = 1 ;
+    }
+    elsif( /^\s*$/o ) {
         # Paragraphs separated by blank lines.
-        print "\@PP\n$ExtraSpace" ;
+        print "\@PP\n$Opt{'extraspace'}" ;
     }
     else {
         print Lout::txt2lout( $_ ) ;
     }
 }
 
-&tail if $Wrapper ;
+&tail if $Opt{'wrapper'} ;
 
 
 sub process_args {
 
+    $Opt{'outfile'}      = 'STDOUT' ;
+    $Opt{'wrapper'}      = 1 ;
+    $Opt{'hyphen'}       = 0 ;
+    $Opt{'smartquotes'}  = 1 ;
+    $Opt{'superscripts'} = 1 ;
+    $Opt{'extraspace'}   = 0 ;
+    $Opt{'verbatim'}     = 1 ;
+    $Opt{'wrapper'}      = 1 ;
+
+    &help if defined $ARGV[0] and $ARGV[0] =~ /^(-h|--help)$/o ;
+
     Getopt::Long::config 'no_ignore_case' ;
-    GetOptions(
-        'h|help'            => \&help,
-        'e|extraspace=i'    => \$ExtraSpace,
-        'o|outfile=s'       => \$Outfile,
-        'q|smartquotes=i'   => \$SmartQuotes,
-        's|superscripts=i'  => \$Superscripts,
-        'w|wrapper=i'       => \$Wrapper,
-        ) or die "\n" ;
+    GetOptions( \%Opt,
+        'hyphen|H=i',
+        'extraspace|e=i',
+        'outfile|o=s',
+        'smartquotes|q=i',
+        'superscripts|s=i',
+        'wrapper|w=i',
+        'verbatim|v=i',
+        ) or &help ;
 
-    Lout::set_option( -smart_quotes => $SmartQuotes ) ;
-    Lout::set_option( -superscripts => $Superscripts ) ;
+    Lout::set_option( -hyphen       => $Opt{'hyphen'} ) ;
+    Lout::set_option( -smart_quotes => $Opt{'smartquotes'} ) ;
+    Lout::set_option( -superscripts => $Opt{'superscripts'} ) ;
+    Lout::set_option( -verbatim     => $Opt{'verbatim'} ) ;
 
-    $ExtraSpace = $ExtraSpace ? "\n" : '' ;
+    $Opt{'extraspace'} = $Opt{'extraspace'} ? "\n" : '' ;
 }
 
 
@@ -70,14 +94,19 @@ This is free software you can use/modify it under the same terms as perl.
 usage: txt2lout [options] <files>
 
 options:
--h    --help          Print this help screen and exit
--e    --extraspace    Print blank lines between paras [$ExtraSpace]
--o F  --outfile F     Write to file F [$Outfile]
--q    --smartquotes   Smartquotes [$SmartQuotes]
--s    --superscripts  Superscripts for 1st, 2nd etc [$Superscripts]
--w    --wrapper       Wrap text in lout \@Begin..\@End [$Wrapper]
+-h --help           Print this help screen and exit
+-H --hyphen       b Turn space delimeted - into -- [$Opt{'hyphen'}]
+-e --extraspace   b Print blank lines between paras [$Opt{'extraspace'}]
+-o --outfile      s Write to file or STDOUT [$Opt{'outfile'}]
+-q --smartquotes  b Smartquotes [$Opt{'smartquotes'}]
+-s --superscripts b Superscripts for 1st, 2nd etc [$Opt{'superscripts'}]
+-w --wrapper      b Wrap text in lout \@Begin..\@End [$Opt{'wrapper'}]
+-v --verbatim     b Treat text between =lout and =endlout lines and
+                    V<\@Verbatim lout> as literal lout [$Opt{'verbatim'}]
 
+b = boolean 1 = true, 0 = false; i = integer; s = string e.g. filename
 The -e option is useful for troff and tex spacing.
+
 e.g. for use in an editor like vim:
     .,\$!txt2lout -w 0 -e 1
 e.g. from the command line:
