@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: lout2html,v 1.10 1999/08/08 15:15:55 root Exp $
+# $Id: lout2html,v 1.11 1999/09/05 12:04:41 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -12,7 +12,7 @@ use Lout ;
 use HTML::Entities ;
 
 use vars qw( $VERSION ) ;
-$VERSION    = '1.03-alpha' ;
+$VERSION    = '1.04-alpha' ;
 
 my $Wrapper = 1 ;
 my $Verbose = 1 ;
@@ -142,7 +142,7 @@ local $_ ;
         $Id{$k} = $v ;
     }    
     
-    ($Sec, $Min, $Hour, $Mday, $Month, $Year ) = (localtime( time ))[0..5] ;
+    ( $Sec, $Min, $Hour, $Mday, $Month, $Year ) = (localtime( time ))[0..5] ;
     $Year += 1900 ; $Month++ ; 
     $Month = "0$Month" if $Month < 10 ; 
     $Mday  = "0$Mday"  if $Mday  < 10 ;
@@ -352,8 +352,11 @@ sub parse {
                         print "\n<LI>" ;
                         last ID ;
                     }
-                    if( $value =~ 
-    /\@(Raw)?(Paren)?(UC)?(Numbered|Roman|Alpha|Bullet|Star|Dash)?List/o ) {
+                    if( $value =~ /
+                        \@(Raw)?(Paren)?(UC)?
+                        (Numbered|Roman|Alpha|Bullet|Star|Dash)?
+                        List
+                        /ox ) {
                         my $list = 'OL' ;
                         $list = 'UL' if $value =~ /(Bullet|Star|Dash)/o ;
                         my $type = '1' ;
@@ -465,7 +468,7 @@ sub esc_lout {
     s/\b(($Arg)\s*\{[^}]+\})/$ESC$X$1$ESC$Y/gos ;
     s/\@(($AtArg)\s*\{[^}]+\})/$ESC$X$1$ESC$Y/gos ;
     s/\@(Place\s*x\s*{[^}]+\}\s*y\s*{[^}]+\})/$ESC$X$1$ESC$Y/gos ;
-    s/(($Colour)\s+)\@(Colou?r)/$ESC$X$1$3$ESC$Y/gos ;
+    s/((?:$Colour)\s+)\@(Colou?r)/$ESC$X$1$2$ESC$Y/gos ;
     s/(\{\s*($Font)?\s*($Family)?\s*([+]?\d+(\.\d+)?[pf])?\s*\})/$ESC$X$1$ESC$Y/gos ;
     
     # Escape lout escapes.
@@ -518,7 +521,7 @@ sub unesc_lout {
     s/([-A-Za-z0-9._\/]+\@[-A-Za-z0-9._\/]+)/<A HREF="mailto:$1">$1<\/A>/gosi ;
 
     # Guess images.
-    s/([-A-Za-z0-9._\/]+\.eps(\.(gz|z|Z))?)/[Image "$1"]/gosi ;
+    s/([-A-Za-z0-9._\/]+\.eps(?:\.(gz|z|Z))?)/[Image "$1"]/gosi ;
 
     $_ ;
 }

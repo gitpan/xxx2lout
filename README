@@ -1,4 +1,4 @@
-xxx2lout version 1.16
+xxx2lout version 1.17
 
 SUMMARY
 
@@ -91,6 +91,7 @@ CHANGES
         you'll need to pick up my Macro package which is in the same place as
         this package.
 
+1999/09/05  Minor corrections to pod2lout. Minor fixes.
 
 
 INSTALLING

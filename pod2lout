@@ -3,7 +3,7 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
 
-# $Id: pod2lout,v 1.10 1999/08/08 15:15:55 root Exp $
+# $Id: pod2lout,v 1.12 1999/09/05 12:04:41 root Exp root $
 
 
 use strict ;
@@ -13,7 +13,7 @@ use Lout ;
 
 use vars qw( $VERSION ) ;
 
-$VERSION         = '1.04' ;
+$VERSION         = '1.05' ;
 
 my $Outfile      = 'STDOUT' ;
 my $Wrapper      = 1 ;
@@ -43,15 +43,15 @@ while( <> ) {
 
     if( $Ignore ) {
         $inpod = 0, next if $inpod and /^=cut/o ;
-        $inpod = 1 if /^=(pod|head|title)/o ;
+        $inpod = 1 if /^=(?:pod|head|title)/o ;
         next unless $inpod ;
     }
 
-    if( /^=(\w+)(\s+([^#]+))?(#.*)?$/o ) {
+    if( /^=(\w+)(?:\s+([^#]+))?(#.*)?$/o ) {
         my $tag  = $1 ;
-        my $text = $3 ? Lout::pod2lout( $3 ) : '' ;
+        my $text = $2 ? Lout::pod2lout( $2 ) : '' ;
         chomp $text ;
-        my $comment = "$4\n" if $4 ;
+        my $comment = "$3\n" if $3 ;
 
         CASE : {
             if( $tag eq 'pod' or 
@@ -74,7 +74,7 @@ while( <> ) {
             }
             if( $tag eq 'over' ) {
                 if( not $inlist ) {
-                    if( $text =~ /^\d/ ) {
+                    if( $text =~ /^\d/o ) {
                         print "\@NumberedList\n{" ;
                         $text = '' ;
                     }
@@ -94,7 +94,7 @@ while( <> ) {
             }
             if( $tag eq 'item' ) {
                 if( not $inlist ) {
-                    if( $text =~ /^\d/ ) {
+                    if( $text =~ /^\d/o ) {
                         print "\@NumberedList\n" ;
                         $text = '' ;
                     }
@@ -102,6 +102,9 @@ while( <> ) {
                         print "\@BulletList\n" ;
                         $text = '' if $text eq '*' ;
                     }
+                }
+                else {
+                    $text = '' if $text =~ /^(?:\d|\*)\s*$/o ;
                 }
                 $inlist--, print "}" if $inlist ;
                 print "\@ListItem {$text\n" ;

@@ -1,6 +1,6 @@
 package HTML::LoutParser ; # Documented at the __END__.
 
-# $Id: LoutParser.pm,v 1.25 1999/08/08 15:17:13 root Exp $
+# $Id: LoutParser.pm,v 1.26 1999/09/04 17:47:40 root Exp root $
 
 
 require HTML::Parser ;
@@ -8,7 +8,7 @@ use Lout ;
 use Text::Wrap ;
 
 use vars qw( $VERSION @ISA ) ;
-$VERSION = '1.02' ;
+$VERSION = '1.03' ;
 
 @ISA = qw( HTML::Parser ) ;
 
@@ -183,7 +183,7 @@ sub start {
         }
         if( $tag eq 'i' or 
             $tag eq 'cite' or
-            $tag =~ /^em(phasis)?$/o ) {
+            $tag =~ /^em(?:phasis)?$/o ) {
             print "{}\@I {" ;
             last CASE ;
         }
@@ -348,21 +348,21 @@ sub end {
             # No action required.
             last CASE ;
         }
-        if( $tag eq 'center'         or 
-            $tag eq 'pre'            or
-            $tag =~ /^[abiu]$/o      or 
-            $tag =~ /^su[bp]$/o      or
-            $tag eq 'strong'         or 
-            $tag =~ /^em(phasis)?$/o or
-            $tag eq 'kbd'            or 
-            $tag eq 'tt'             or 
-            $tag eq 'dd'             or 
-            $tag eq 'dl'             or 
-            $tag eq 'code'           or
-            $tag =~ /^h[1-6]$/o      or 
-            $tag eq 'font'           or
-            $tag eq 'cite'           or
-            $tag eq 'blockquote'     or
+        if( $tag eq 'center'           or 
+            $tag eq 'pre'              or
+            $tag =~ /^[abiu]$/o        or 
+            $tag =~ /^su[bp]$/o        or
+            $tag eq 'strong'           or 
+            $tag =~ /^em(?:phasis)?$/o or
+            $tag eq 'kbd'              or 
+            $tag eq 'tt'               or 
+            $tag eq 'dd'               or 
+            $tag eq 'dl'               or 
+            $tag eq 'code'             or
+            $tag =~ /^h[1-6]$/o        or 
+            $tag eq 'font'             or
+            $tag eq 'cite'             or
+            $tag eq 'blockquote'       or
             $tag eq 'title'
             ) {
             print "}\n" ;
@@ -528,6 +528,8 @@ If you have something like "E<lt>IE<gt>thisE<lt>/IE<gt>." it may become "{}@I
 1999/07/30  Added -verbose option.
 
 1999/08/08  Changed licence to LGPL.
+
+1999/09/04  Tiny fixes.
 
 =head1 AUTHOR
 

@@ -1,12 +1,12 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.13 1999/08/29 19:12:04 root Exp root $
+# $Id: Lout.pm,v 1.15 1999/09/05 12:10:46 root Exp root $
 
 
 use strict ; 
 
 use vars qw( $VERSION %Entity2char ) ;
-$VERSION    = '1.10' ;
+$VERSION = '1.12' ;
 
 
 my %option = (
@@ -168,7 +168,7 @@ sub txt2lout {
     my @verbatim ;
     if( $option{-verbatim} ) {
         my $i = 0 ;
-        while( s/V<([^>]+)>/$PLACE$i/os ) {
+        while( s/V<[^>]+>/$PLACE$i/os ) {
             $verbatim[$i++] = $1 ;
         }
     }
@@ -215,7 +215,7 @@ sub txt2lout {
     if( $option{-html} ) {
         s/(&\#(\d+);?)/$2 < 256 ? chr $2 : $1/eg ;
         s/(&\#[xX]([0-9a-fA-F]+);?)/my $c = hex $2 ; $c < 256 ? chr $c : $1/eg ;
-        s/(&(\w+);?)/$Entity2char{$2} || $2/eg ;
+        s/(?:&(\w+);?)/$Entity2char{$1} || $1/eg ;
     }
 
     s/(&)/"$1"/go ;
@@ -364,6 +364,8 @@ None that I know of!
 1999/08/08  Changed licence to LGPL.
 
 1999/08/15  Added -hyphen and -verbatim options.
+
+1999/09/04  Tiny improvement.
 
 
 =head1 AUTHOR

@@ -3,7 +3,7 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
 
-# $Id: perl2lout,v 1.8 1999/08/08 15:15:55 root Exp $
+# $Id: perl2lout,v 1.9 1999/09/05 12:04:41 root Exp root $
 
 use strict ;
 
@@ -12,7 +12,7 @@ use Lout ;
 
 use vars qw( $VERSION ) ;
 
-$VERSION      = '1.03' ;
+$VERSION      = '1.04' ;
 
 my $colour    = 0 ;
 my $tab       = 4 ;
@@ -43,7 +43,7 @@ my $inpod = 0 ;
 my $lino = 0 ;
 while( <> ) {
     $lino++ ;
-    $inpod = 1 if /^=(pod|head|title)/o ; 
+    $inpod = 1 if /^=(?:pod|head|title)/o ; 
     if( $inpod ) {
         if( not $ignorepod ) {
             my $pod = Lout::pod2lout( $_ ) ;
