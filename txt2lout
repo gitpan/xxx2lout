@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: txt2lout,v 1.17 2000/01/24 22:46:15 root Exp root $
+# $Id: txt2lout,v 1.18 2000/02/01 21:08:34 root Exp $
 
 # Copyright (c) 1999-2000 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -8,10 +8,10 @@
 use strict ; 
 
 use Getopt::Long ;
-use Lout qw( txt2lout set_option ) ;
+use Lout qw( txt2lout ) ;
 
 use vars qw( $VERSION ) ;
-$VERSION = '1.05' ;
+$VERSION = '1.06' ;
 
 my %Opt ;
 
@@ -75,10 +75,10 @@ sub process_args {
         'verbatim|v=i',
         ) or &help ;
 
-    set_option( -hyphen       => $Opt{'hyphen'} ) ;
-    set_option( -smart_quotes => $Opt{'smartquotes'} ) ;
-    set_option( -superscripts => $Opt{'superscripts'} ) ;
-    set_option( -verbatim     => $Opt{'verbatim'} ) ;
+    Lout::set_option( -hyphen       => $Opt{'hyphen'} ) ;
+    Lout::set_option( -smart_quotes => $Opt{'smartquotes'} ) ;
+    Lout::set_option( -superscripts => $Opt{'superscripts'} ) ;
+    Lout::set_option( -verbatim     => $Opt{'verbatim'} ) ;
 
     $Opt{'extraspace'} = $Opt{'extraspace'} ? "\n" : '' ;
 }

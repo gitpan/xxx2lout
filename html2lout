@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: html2lout,v 1.20 2000/01/24 22:46:15 root Exp root $
+# $Id: html2lout,v 1.21 2000/02/01 21:08:34 root Exp $
 
 # Copyright (c) 1999-2000 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -8,11 +8,11 @@
 use strict ; 
 
 use Getopt::Long ;
-use Lout qw( set_option ) ;
+use Lout ;
 require HTML::LoutParser ;
 
 use vars qw( $VERSION ) ;
-$VERSION    = '1.11' ;
+$VERSION    = '1.12' ;
 
 my $Parser ;
 my $Wrapper = 1 ;
@@ -61,8 +61,8 @@ sub prepare {
         'w|wrapper=i'           => \$Wrapper,
         ) or die "\n" ;
 
-    set_option( -smartquotes  => $SmartQuotes ) ;
-    set_option( -superscripts => $Superscripts ) ;
+    Lout::set_option( -smartquotes  => $SmartQuotes ) ;
+    Lout::set_option( -superscripts => $Superscripts ) ;
 
     if( $Outfile ne 'STDOUT' ) {
         open OUT, ">$Outfile" or die "Failed to open $Outfile: $!\n" ;

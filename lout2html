@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: lout2html,v 1.17 2000/01/24 21:43:44 root Exp $
+# $Id: lout2html,v 1.18 2000/04/15 16:55:57 root Exp root $
 
 # Copyright (c) 1999-2000 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -14,32 +14,34 @@ use Lout qw( %Char2entity %Entity2char ) ;
 use HTML::Entities ;
 
 use vars qw( $VERSION ) ;
-$VERSION    = '1.12-alpha' ;
+$VERSION    = '1.14-alpha' ;
 
 my $Wrapper = 1 ;
 my $Verbose = 1 ;
 
 # setup data
 
-my $TEXT    = '__TEXT__' ;
-my $ID      = '__ID__' ;
-my $CHAR    = '__CHAR__' ;
+use readonly 
+        '$TEXT'    => '__TEXT__',
+        '$ID'      => '__ID__',
+        '$CHAR'    => '__CHAR__',
 
-my $ESC     = "\x00" ;
-my $AT      = "\x01" ;
-my $BSLASH  = "\x02" ;
-my $FSLASH  = "\x03" ;
-my $DQUOTE  = "\x04" ;
-my $BAR     = "\x05" ;
-my $HASH    = "\x06" ;
-my $AND     = "\x07" ;
-my $SKIP    = "\xF7" ;
-my $X       = "\xF8" ;
-my $Y       = "\xF9" ;
-my $LBRACE  = "\xFC" ;
-my $RBRACE  = "\xFD" ;
-my $HAT     = "\xFE" ;
-my $TILDE   = "\xFF" ;
+        '$ESC'     => "\x00",
+        '$AT'      => "\x01",
+        '$BSLASH'  => "\x02",
+        '$FSLASH'  => "\x03",
+        '$DQUOTE'  => "\x04",
+        '$BAR'     => "\x05",
+        '$HASH'    => "\x06",
+        '$AND'     => "\x07",
+        '$SKIP'    => "\xF7",
+        '$X'       => "\xF8",
+        '$Y'       => "\xF9",
+        '$LBRACE'  => "\xFC",
+        '$RBRACE'  => "\xFD",
+        '$HAT'     => "\xFE",
+        '$TILDE'   => "\xFF",
+        ;
 
 my %Id2entity = map { 
         $Entity2char{$_} !~ /^\@Char/o ? ( $Entity2char{$_}, "&" . "$_;" ) : () ; 
@@ -200,6 +202,7 @@ sub parse {
                     }
                     if( $value =~ /^\@[LDP]P$/o ) {
                         print "\n<p>\n" ;
+                        push @pending, "\n</p>\n" ;
                         last ID ;
                     }
                     if( $value eq '@LLP' ) {

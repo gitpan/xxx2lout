@@ -1,25 +1,25 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.19 2000/01/24 22:42:28 root Exp root $
+# $Id: Lout.pm,v 1.20 2000/02/18 22:38:52 root Exp root $
 
 use strict ; 
 
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS
              %Entity2char %Char2entity ) ;
-$VERSION = '1.15' ;
+$VERSION = '1.18' ;
 
 use Exporter() ;
 
 @ISA       = qw( Exporter ) ;
 
-@EXPORT_OK = qw( txt2lout pod2lout htmlentity2lout set_option 
+@EXPORT_OK = qw( txt2lout pod2lout htmlentity2lout 
                  %Entity2char %Char2entity 
                  ) ;
 
 %EXPORT_TAGS = ( 
-    ALL   => [ qw( txt2lout pod2lout htmlentity2lout set_option 
+    ALL   => [ qw( txt2lout pod2lout htmlentity2lout 
                    %Entity2char %Char2entity ) ],
-    Func  => [ qw( txt2lout pod2lout htmlentity2lout set_option ) ],
+    Func  => [ qw( txt2lout pod2lout htmlentity2lout ) ],
     Hash  => [ qw( %Entity2char %Char2entity ) ],
     ) ;
 
@@ -180,15 +180,16 @@ my %option = (
     '@Char backslash'       => '\\',
     ) ;
 
-
-my $AT          = "\x00" ;
-my $LBRACE      = "\x01" ;
-my $RBRACE      = "\x02" ;
-my $ELLIPSIS    = "\x03" ;
-my $QLEFT       = "\x04" ;
-my $QRIGHT      = "\x05" ;
-my $PARA        = "\x06" ;
-my $PLACE       = "\x07" ;
+use readonly
+        '$AT'       => "\x00",
+        '$LBRACE'   => "\x01",
+        '$RBRACE'   => "\x02",
+        '$ELLIPSIS' => "\x03",
+        '$QLEFT'    => "\x04",
+        '$QRIGHT'   => "\x05",
+        '$PARA'     => "\x06",
+        '$PLACE'    => "\x07",
+        ;
 
 sub set_option {
     my( $key, $value ) = @_ ;

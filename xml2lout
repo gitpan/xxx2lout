@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: xml2lout,v 1.6 2000/01/26 20:36:32 root Exp root $
+# $Id: xml2lout,v 1.9 2000/04/15 16:55:57 root Exp root $
 
 # Copyright (c) 2000 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -14,10 +14,12 @@ use Text::Wrap qw( wrap $columns ) ;
 use XML::Parser ;
 
 use vars qw( $VERSION ) ;
-$VERSION   = '0.04' ;
+$VERSION   = '0.06' ;
 
-my $SUFFIX = '\\.[xX][mM][lL]$' ;
-my $INDENT = '    ' ;
+use readonly
+        '$SUFFIX' => '\\.[xX][mM][lL]$',
+        '$INDENT' => '    ',
+        ;
 
 my %Opt ;               # User preferences (see getoptions)
 my $Parser = XML::Parser->new( Style => 'Stream' ) ;
@@ -40,7 +42,7 @@ foreach my $file ( @ARGV ) {
         open $Fh, ">$lout" or die "Failed to open $lout: $!\n" ;
         $Parser->parsefile( $File ) ;
         close $Fh or die "Failed to close $lout: $!\n" ;
-        &def ; 
+        &create_def ; 
     } ;
     warn $@ if $@ ;
 }
@@ -48,15 +50,10 @@ foreach my $file ( @ARGV ) {
 
 sub StartDocument {
 
-    my( $d, $m, $y ) = (localtime( time ))[3..5] ;
-    $y += 1900 ; $m++ ; 
-    $m = "0$m" if $m < 10 ; 
-    $d = "0$d" if $d < 10 ;
- 
     print $Fh <<__EOT__ ;
 \@SysInclude { tbl }
 \@SysInclude { doc }
-# Converted from $File by xml2lout on $y/$m/$d.
+# Converted from $File by xml2lout on @{[&datestamp]}.
 __EOT__
 
     if( $Opt{'def'} =~ /^[12]$/o ) {
@@ -82,7 +79,7 @@ sub EndDocument {
 sub StartTag {
     my( $self, $tagtype ) = @_ ;
 
-    my $tagname = &normalise( $tagtype ) ;
+    my $tagname = &normalise( 'tag', $tagtype ) ;
     my $indent  = $INDENT x $Indent++ ;
 
     print $Fh "$indent$tagname\n" ;  
@@ -90,7 +87,7 @@ sub StartTag {
 
     if( $Opt{'attr'} ) {
         while( my( $attrib, $value ) = each %_ ) {
-            $attrib = &normalise( $attrib ) ;
+            $attrib = &normalise( 'arg', $attrib ) ;
             print $Fh "$indent${INDENT}$attrib { $value }\n" ;
             $Attrib{$tagname}{$attrib} = undef if $Opt{'def'} ; 
         }
@@ -123,7 +120,7 @@ sub Text {
 }
 
 
-sub def {
+sub create_def {
 
     my $file = $File ;
     $file =~ s/$SUFFIX/-def/o ;
@@ -142,6 +139,7 @@ sub def {
     my $fh = gensym ;
     eval {
         open $fh, ">$file" or die "Failed to open $file: $!\n" ;
+        print $fh "# Generated from $File by xml2lout on @{[&datestamp]}.\n\n" ;
         foreach my $tag ( sort { lc $a cmp lc $b } keys %Attrib ) {
             if( defined %{$Attrib{$tag}} and $Opt{'attr'} ) {
                 print $fh "def $tag\n" ;
@@ -153,7 +151,7 @@ sub def {
                           "${INDENT}aformat { \@Cell A | \@Cell B }\n{\n" ;
                 foreach my $attr ( sort { lc $a cmp lc $b } keys %{$Attrib{$tag}} ) {
                     my $attrname = $attr ;
-                    $attrname =~ s/^\Q$Opt{'prefix'}//o ;
+                    $attrname =~ s/^\Q$Opt{'arg'}//o ;
                     print $fh "${INDENT}\@Rowa A { \@I $attrname } B { $attr }\n" ;
                 }
                 print $fh "}\n\@LLP\nx\n\@LP\n}\n\n" ;
@@ -169,39 +167,54 @@ sub def {
 
 
 sub normalise {
-    local $_ = shift ;
+    my $arg_or_tag = shift ;
+    local $_       = shift ;
 
     tr/\@A-Za-z//cd ; 
-    $_ = $Opt{'prefix'} . $_ ;
 
-    $_ ;
+    "$Opt{$arg_or_tag}$_" ;
+}
+
+
+sub datestamp {
+
+    my( $d, $m, $y ) = (localtime( time ))[3..5] ;
+    $y += 1900 ; $m++ ; 
+    $m = "0$m" if $m < 10 ; 
+    $d = "0$d" if $d < 10 ;
+
+    "$y/$m/$d" ;
 }
 
 
 sub getoptions {
 
     # Defaults.
+    $Opt{'arg'}     = '@arg' ;
     $Opt{'attr'}    = 1 ;
     $Opt{'def'}     = 1 ;
     $Opt{'indent'}  = $INDENT ;
     $Opt{'lout'}    = '.lt' ;
-    $Opt{'prefix'}  = '@xml' ;
+    $Opt{'prefix'}  = '@xml' ; # deprecated - use arg & tag instead
     $Opt{'quotes'}  = 1 ;
     $Opt{'super'}   = 1 ;
+    $Opt{'tag'}     = '@tag' ;
     $Opt{'tex'}     = 1 ;
     $Opt{'verbose'} = 1 ; 
     $Opt{'wrap'}    = 0 ;
 
     Getopt::Long::config 'no_ignore_case' ; 
     GetOptions( \%Opt,
+        'arg|g=s',
         'attr|a=i',
         'def|d=s',
         'help|h',
         'indent|i=s',
         'lout|l=s',
-        'prefix|p=s',
+        'prefix|p=s', # deprecated - use arg & tag instead
         'quotes|q=i',
         'super|s=i',
+        'tag|G=s',
         'tex|t=i',
         'verbose|v',
         'wrap|w=i',
@@ -216,6 +229,8 @@ sub getoptions {
 
     $INDENT ||= $Opt{'indent'} ;
     $INDENT = '' unless $Opt{'tex'} ;
+
+    $Opt{'arg'} = $Opt{'tag'} = $Opt{'prefix'} if $Opt{'prefix'} ne '@xml' ; 
 
 #    print STDERR map { "$_=[$Opt{$_}]\n" } keys %Opt ; exit ; # DEBUG
 }
@@ -232,19 +247,21 @@ usage: xml2lout [options] <file(s)>
 -a  --attr     output attributes [$Opt{'attr'}]
 -d  --def      filename = use \@Include{filename} [$Opt{'def'}]
                0 = assume \@Include{mydefs}
-               1 = create file-def with std defs for each file, 
+               1 = create file-def with std defs for each file 
                2 = same as 1 but overwrites an existing file-def
+-g  --arg      Prefix for Lout def args [$Opt{'arg'}]
+-G  --tag      Prefix for Lout defs [$Opt{'tag'}]
 -i  --indent   Indent to use [$Opt{'indent'}]
 -l  --lout     Lout suffix [$Opt{'lout'}]
--p  --prefix   Prefix for Lout defs [$Opt{'prefix'}]
+-p  --prefix   Prefix for Lout defs (deprecated use -g \& -G)
 -q  --quotes   Smart Quotes [$Opt{'quotes'}]
 -s  --super    Superscripts e.g. for 1st etc [$Opt{'super'}]
 -t  --tex      Tex or nroff spacing [$Opt{'tex'}]
--w  --wrap     Wrap text at this column (slow) 0 = no wrap [$Opt{'wrap'}]
 -v  --verbose  Verbose [$Opt{'verbose'}]
+-w  --wrap     Wrap text at this column (slow) 0 = no wrap [$Opt{'wrap'}]
 
-If you just run xml2lout over an XML file it will generate a def file which
-you can then edit to suit.
+If you just run xml2lout over an XML file it will generate a lout file and a
+def file - you can then edit the def file to suit. 
 
 __EOT__
     exit ;
@@ -259,11 +276,13 @@ xml2lout
 
 =head1 DESCRIPTION
 
-Simple XML to Lout converter
+Simple XML to Lout converter. lout may fail on large documents because
+xml2lout doesn't generate defs that use @Galleys: but you are expected to
+edit the defs anyway.
 
 =head1 README
 
-Simple XML to Lout converter
+Simple XML to Lout converter. 
 
 =head1 PREREQUISITES
 

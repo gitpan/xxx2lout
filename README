@@ -1,12 +1,12 @@
-xxx2lout version 1.33
+xxx2lout version 1.35
 
 SUMMARY
 
 The following little perl programs are included:
 * html2lout - Converts HTML to lout
-* pod2lout  - Converts pod to lout
+* pod2lout  - Removed -- use Lout's prg2lout program; lout 1.21 or later
 * txt2lout  - Converts plain text to lout
-* perl2lout - Converts perl programs to lout
+* perl2lout - Removed -- use Lout's prg2lout program; lout 1.21 or later
 * xml2lout  - Converts XML to lout (alpha) *NEW*
 * lout2html - Converts a subset of lout to HTML (very alpha!)
 
@@ -27,26 +27,29 @@ the desperate!
 
 xml2lout is very simple, basically for each XML tag it creates a lout def like
 this:
-    def @xmlTAGNAME right x { x @LP }
+    def @tagTAGNAME right x { x @LP }
 You can then edit this definition to have each of your tags do whatever you
 want. If your tag has attributes the definition should be something like this:
-    def @xmlTAGNAME 
-        named @xmlATTRIBA {} 
-        named @xmlATTRIBB {} 
+    def @tagTAGNAME 
+        named @argATTRIBA {} 
+        named @argATTRIBB {} 
         right x 
     { 
     @Tbl 
         rule { single }
         aformat { @Cell A | @Cell B }
     {
-        @Rowa A { @I ATTRIBA } B { @xmlATTRIBA }
-        @Rowa A { @I ATTRIBB } B { @xmlATTRIBB }
+        @Rowa A { @I ATTRIBA } B { @argATTRIBA }
+        @Rowa A { @I ATTRIBB } B { @argATTRIBB }
     }
     @LLP
     x 
     @LP
     }
 In both cases the `x' is the text that comprises the body of the tag (if any).
+Clearly the body should be a galley since XML is a recursive structure and
+therefore the outermost tag will contain the entire document. A replacement
+def which will do this would be most welcome...
 
 
 Even if they don't give you exactly the results you want they may be enough to

@@ -78,3 +78,8 @@ CHANGES
 
 2000/01/26  Improved xml2lout's lout output.
 
+2000/04/08  Removed pod2lout and perl2lout from the bundle; Lout's prg2lout
+            program (with lout 1.20 or later) now provides these and does a
+            far better job.
+
+2000/04/15  You now need readonly.pm to use Lout.pm.
