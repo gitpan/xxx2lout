@@ -1,0 +1,74 @@
+#!/usr/bin/perl -w
+
+# $Id: html2lout,v 1.5 1999/07/11 17:07:44 root Exp $
+
+# Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
+# May be used/distributed under the same terms as Perl itself.
+
+# Convert HTML files to Lout. 
+
+use strict ; 
+
+use Getopt::Long ;
+use Lout ;
+require HTML::LoutParser ;
+
+use vars qw( $VERSION ) ;
+$VERSION         = '0.02' ;
+
+
+my $Outfile      = 'STDOUT' ;
+my $SmartQuotes  = 1 ;
+my $Superscripts = 1 ;
+my $Wrapper      = 1 ;
+
+# main
+
+&process_args ;
+if( $Outfile ne 'STDOUT' ) {
+    open OUT, ">$Outfile" or die "Failed to open $Outfile: $!\n" ;
+    select( OUT ) ;
+}
+my $html2lout = HTML::LoutParser->new ;
+$html2lout->start_lout if $Wrapper ;
+while( <> ) {
+    $html2lout->parse( $_ ) ;
+}
+$html2lout->eof ;
+$html2lout->end_lout if $Wrapper ;
+
+
+sub process_args {
+
+    Getopt::Long::config 'no_ignore_case' ;
+    GetOptions(
+        'h|help'            => \&help,
+        'o|outfile=s'       => \$Outfile,
+        'q|smartquotes=i'   => \$SmartQuotes,
+        's|superscripts=i'  => \$Superscripts,
+        'w|wrapper'         => \$Wrapper,
+        ) or die "\n" ;
+
+    Lout::set_txt2lout( -smart_quotes, $SmartQuotes ) ;
+    Lout::set_txt2lout( -superscripts, $Superscripts ) ;
+}
+
+
+sub help {
+    print <<__EOT__ ;
+html2lout v $VERSION. Copyright (c) Mark Summerfield 1999. All rights reserved.
+This is free software you can use/modify it under the same terms as perl.
+
+usage: html2lout [options] <files>
+
+options:
+-h    --help          Print this help screen and exit
+-o F  --outfile F     Write to file F [$Outfile]
+-q    --smartquotes   Smartquotes [$SmartQuotes]
+-s    --superscripts  Superscripts for 1st, 2nd etc [$Superscripts]
+-w    --wrapper       Wrap text in lout \@Begin..\@End [$Wrapper]
+__EOT__
+    exit ;
+}
+
+

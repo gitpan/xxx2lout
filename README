@@ -1,0 +1,47 @@
+xxx2lout version 0.01
+
+The following little perl programs are included:
+* html2lout - Converts HTML to lout
+* pod2lout  - Converts pod to lout
+* txt2lout  - Converts plain text to lout
+* perl2lout - Converts perl programs to lout
+
+They are supported by two modules:
+* Lout.pm - this provides the txt2lout function used by the first three
+            converters, and a supporting set_txt2lout function; and
+* HTML/LoutParser.pm - this provides the routines for the hooks in the 
+                       HTML/Parser.pm module.
+
+txt2lout can be used as a nice filter, say in vi, with ".,$!txt2lout -w 0" for
+example.
+
+html2lout (i.e. HTML/LoutParser.pm) doesn't do tables - but I intend having a
+go at that. It also doesn't deal with &entities; very well since it relies on
+HTML/Parser.pm to translate them and uses each 8-bit character as is; the awk
+html2lout converts entities directly into {@Char entity}'s which is what I
+should do.
+
+Even if they don't give you exactly the results you want they may be enough to
+knock some source text into a usable form.
+
+As for installing just create a directory somewhere and unzip and untar the 
+lot, e.g.
+
+tar xvfz xxx2lout-VERSION.tar.gz
+
+or
+
+gunzip xxx2lout-VERSION.tar.gz
+tar xvf xxx2lout-VERSION.tar
+
+then either put this directory in your PATH or create some soft links from
+somewhere on your path to the xxx2lout scripts you want.
+
+Note: You must have Perl 5.004 or later; and to use html2lout you must have
+HTML::Parser which comes in the libwww-perl library.
+
+These are quick scripts, but if you have comments, improvements etc send them
+to <mark@chest.ac.uk> with 'xxx2lout' in the subject line.
+
+Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
+May be used/distributed under the same terms as Perl itself.

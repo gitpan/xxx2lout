@@ -1,0 +1,104 @@
+#!/usr/bin/perl -w
+
+# $Id: txt2lout,v 1.5 1999/07/11 17:15:13 root Exp root $
+
+# Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
+# May be used/distributed under the same terms as Perl itself.
+
+# Convert plain text to Lout. 
+
+use strict ; 
+
+use Getopt::Long ;
+use Lout ;
+
+
+use vars qw( $VERSION ) ;
+$VERSION    = '0.02' ;
+
+my $Outfile      = 'STDOUT' ;
+my $Wrapper      = 1 ;
+my $SmartQuotes  = 1 ;
+my $Superscripts = 1 ;
+
+# main
+
+&process_args ;
+if( $Outfile ne 'STDOUT' ) {
+    open OUT, ">$Outfile" or die "Failed to open $Outfile: $!\n" ;
+    select( OUT ) ;
+}
+
+&head if $Wrapper ;
+
+while( <> ) {
+    if( /^\s*$/o ) {
+        # Paragraphs separated by blank lines.
+        print "\@LP\n" ;
+    }
+    else {
+        print Lout::txt2lout( $_ ) ;
+    }
+}
+
+&tail if $Wrapper ;
+
+
+sub process_args {
+
+    Getopt::Long::config 'no_ignore_case' ;
+    GetOptions(
+        'h|help'            => \&help,
+        'o|outfile=s'       => \$Outfile,
+        'q|smartquotes=i'   => \$SmartQuotes,
+        's|superscripts=i'  => \$Superscripts,
+        'w|wrapper=i'       => \$Wrapper,
+        ) or die "\n" ;
+
+    Lout::set_txt2lout( -smart_quotes, $SmartQuotes ) ;
+    Lout::set_txt2lout( -superscripts, $Superscripts ) ;
+}
+
+
+sub help {
+    print <<__EOT__ ;
+txt2lout v $VERSION. Copyright (c) Mark Summerfield 1999. All rights reserved.
+This is free software you can use/modify it under the same terms as perl.
+
+usage: txt2lout [options] <files>
+
+options:
+-h    --help          Print this help screen and exit
+-o F  --outfile F     Write to file F [$Outfile]
+-q    --smartquotes   Smartquotes [$SmartQuotes]
+-s    --superscripts  Superscripts for 1st, 2nd etc [$Superscripts]
+-w    --wrapper       Wrap text in lout \@Begin..\@End [$Wrapper]
+__EOT__
+    exit ;
+}
+
+
+sub head {
+ 
+    my( $d, $m, $y ) = (localtime( time ))[3..5] ;
+    $y += 1900 ; $m++ ; 
+    $m = "0$m" if $m < 10 ; 
+    $d = "0$d" if $d < 10 ;
+
+    print <<__EOT__ ;
+\@SysInclude { tbl }
+\@SysInclude { doc }
+# Created by txt2lout on $y/$m/$d.
+\@Doc \@Text \@Begin
+__EOT__
+}
+
+
+sub tail {
+    print <<__EOT__ ;
+\@End \@Text
+__EOT__
+}
+
+
+
