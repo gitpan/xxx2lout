@@ -1,6 +1,6 @@
 package HTML::LoutParser ; # Documented at the __END__.
 
-# $Id: LoutParser.pm,v 1.26 1999/09/04 17:47:40 root Exp root $
+# $Id: LoutParser.pm,v 1.28 1999/09/06 18:17:06 root Exp $
 
 
 require HTML::Parser ;
@@ -8,7 +8,7 @@ use Lout ;
 use Text::Wrap ;
 
 use vars qw( $VERSION @ISA ) ;
-$VERSION = '1.03' ;
+$VERSION = '1.05' ;
 
 @ISA = qw( HTML::Parser ) ;
 
@@ -258,11 +258,14 @@ sub start {
             last CASE ;
         }
         if( $tag eq 'li' or $tag eq 'dt' ) {
-            if( ${$self->{LIST}}[$#{$self->{LIST}}] > 0 ) {
+            if( defined ${$self->{LIST}}[$#{$self->{LIST}}] and
+                        ${$self->{LIST}}[$#{$self->{LIST}}] > 0 ) {
                 print "}" ;
                 ${$self->{LIST}}[$#{$self->{LIST}}]-- ;
             }
             print "\n\@ListItem {" ;
+            push @{$self->{LIST}}, 0 
+            unless defined ${$self->{LIST}}[$#{$self->{LIST}}] ;
             ${$self->{LIST}}[$#{$self->{LIST}}]++ ;
             last CASE ;
         }
@@ -350,20 +353,20 @@ sub end {
         }
         if( $tag eq 'center'           or 
             $tag eq 'pre'              or
-            $tag =~ /^[abiu]$/o        or 
-            $tag =~ /^su[bp]$/o        or
             $tag eq 'strong'           or 
-            $tag =~ /^em(?:phasis)?$/o or
             $tag eq 'kbd'              or 
             $tag eq 'tt'               or 
             $tag eq 'dd'               or 
             $tag eq 'dl'               or 
             $tag eq 'code'             or
-            $tag =~ /^h[1-6]$/o        or 
             $tag eq 'font'             or
             $tag eq 'cite'             or
             $tag eq 'blockquote'       or
-            $tag eq 'title'
+            $tag eq 'title'            or
+            $tag =~ /^[abiu]$/o        or 
+            $tag =~ /^su[bp]$/o        or
+            $tag =~ /^em(?:phasis)?$/o or
+            $tag =~ /^h[1-6]$/o        
             ) {
             print "}\n" ;
             last CASE ;

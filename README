@@ -1,4 +1,4 @@
-xxx2lout version 1.17
+xxx2lout version 1.18
 
 SUMMARY
 
@@ -92,6 +92,10 @@ CHANGES
         this package.
 
 1999/09/05  Minor corrections to pod2lout. Minor fixes.
+
+1999/09/06  Please don't use v 1.17 (I broke lout2html and Lout.pm) - use 1.16
+            or earlier or this version (1.18) or later.
+            Apart from fixing, have also done some small efficiency improvements.
 
 
 INSTALLING

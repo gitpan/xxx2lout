@@ -1,12 +1,12 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.15 1999/09/05 12:10:46 root Exp root $
+# $Id: Lout.pm,v 1.17 1999/09/06 17:59:45 root Exp $
 
 
 use strict ; 
 
 use vars qw( $VERSION %Entity2char ) ;
-$VERSION = '1.12' ;
+$VERSION = '1.14' ;
 
 
 my %option = (
@@ -168,7 +168,7 @@ sub txt2lout {
     my @verbatim ;
     if( $option{-verbatim} ) {
         my $i = 0 ;
-        while( s/V<[^>]+>/$PLACE$i/os ) {
+        while( s/V<([^>]+)>/$PLACE$i/os ) {
             $verbatim[$i++] = $1 ;
         }
     }
@@ -220,7 +220,7 @@ sub txt2lout {
 
     s/(&)/"$1"/go ;
 
-    s/(\s)-(\s)/$1--$2/go if $option{-hyphen} ;
+    s/([^-\S])-([^-\S])/$1--$2/go if $option{-hyphen} ;
 
     # Fixups
     s/$QLEFT/`/go ;

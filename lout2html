@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: lout2html,v 1.11 1999/09/05 12:04:41 root Exp root $
+# $Id: lout2html,v 1.12 1999/09/06 17:50:42 root Exp $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the GPL.
@@ -12,7 +12,7 @@ use Lout ;
 use HTML::Entities ;
 
 use vars qw( $VERSION ) ;
-$VERSION    = '1.04-alpha' ;
+$VERSION    = '1.05-alpha' ;
 
 my $Wrapper = 1 ;
 my $Verbose = 1 ;
@@ -279,7 +279,7 @@ sub parse {
                         push @pending, "\n</PRE>\n" ;
                         last ID ;
                     }
-                    if( $value =~ /\@(Foot|Left|Right)Note/o ) {
+                    if( $value =~ /\@(?:Foot|Left|Right)Note/o ) {
                         print "\n[<I>Note:</I> " ;
                         push @pending, "]\n" ;
                         last ID ;
@@ -345,20 +345,20 @@ sub parse {
                         }
                         last ID ;
                     }
-                    if( $value =~ /^\@(Drop)?ListItem/o or 
-                        $value =~ /^\@(Drop)?TagItem/o  or
-                        $value eq '@LI'                 
+                    if( $value =~ /^\@(?:Drop)?ListItem/o or 
+                        $value =~ /^\@(?:Drop)?TagItem/o  or
+                        $value eq '@LI' #/
                         ) {
                         print "\n<LI>" ;
                         last ID ;
                     }
                     if( $value =~ /
-                        \@(Raw)?(Paren)?(UC)?
-                        (Numbered|Roman|Alpha|Bullet|Star|Dash)?
+                        \@(?:Raw)?(?:Paren)?(?:UC)?
+                        (?:Numbered|Roman|Alpha|Bullet|Star|Dash)?
                         List
                         /ox ) {
                         my $list = 'OL' ;
-                        $list = 'UL' if $value =~ /(Bullet|Star|Dash)/o ;
+                        $list = 'UL' if $value =~ /(?:Bullet|Star|Dash)/o ;
                         my $type = '1' ;
                         if( $value =~ /Roman/o ) {
                             $type = 'i' ;
@@ -377,7 +377,7 @@ sub parse {
                         push @list, "\n</UL>\n" ;
                         last ID ;
                     }
-                    if( $value =~ /^\@(Raw)?EndList/o ) {
+                    if( $value =~ /^\@(?:Raw)?EndList/o ) {
                         print pop @list if scalar @list ;
                         last ID ;
                     }
@@ -457,19 +457,21 @@ sub esc_lout {
 
     # Fix some raw lout.
     # Again we really need negative look ahead and negative look behind...
-    s!//(\d+(\.\d+)?([pf])?)?([^"])!{\@LP}$1!gos ; #"
-    s/\|(\d+(\.\d+)?([pf])?)?([^"])/{\@LP}$1/gos; 
+    s,//(\d+(?:\.\d+)?(?:[pf])?)(?!\"),{\@LP}$1,gos ; #"
+    s/\|(\d+(?:\.\d+)?(?:[pf])?)(?!\")/{\@LP}$1/gos ; 
 
     # Comment out or delete args.
     s/^#(.*)$/$ESC$X$1$ESC$Y/gom ;
     s/([^"])#(.*)$/$1$ESC$X$2$ESC$Y/gom ;
-    s{\{\s*(adjust|outdent|[ro]?ragged)\s*(\d+(\.\d+)?[pf])?\s*((no)?hyphen)?\s*\}}
-     {$ESC$X$1$ESC$Y}gos ;
-    s/\b(($Arg)\s*\{[^}]+\})/$ESC$X$1$ESC$Y/gos ;
-    s/\@(($AtArg)\s*\{[^}]+\})/$ESC$X$1$ESC$Y/gos ;
+    s{\{\s*(adjust|outdent|[ro]?ragged)\s*
+      (?:\d+(?:\.\d+)?[pf])?\s*(?:(?:no)?hyphen)?\s*\}}
+     {$ESC$X$1$ESC$Y}gosx ;
+    s/\b((?:$Arg)\s*\{[^}]+\})/$ESC$X$1$ESC$Y/gos ;
+    s/\@((?:$AtArg)\s*\{[^}]+\})/$ESC$X$1$ESC$Y/gos ;
     s/\@(Place\s*x\s*{[^}]+\}\s*y\s*{[^}]+\})/$ESC$X$1$ESC$Y/gos ;
     s/((?:$Colour)\s+)\@(Colou?r)/$ESC$X$1$2$ESC$Y/gos ;
-    s/(\{\s*($Font)?\s*($Family)?\s*([+]?\d+(\.\d+)?[pf])?\s*\})/$ESC$X$1$ESC$Y/gos ;
+    s/(\{\s*(?:$Font)?\s*(?:$Family)?\s*(?:[+]?\d+(?:\.\d+)?[pf])?\s*\})/
+      $ESC$X$1$ESC$Y/gosx ;
     
     # Escape lout escapes.
     s/"(\S*)\@(\S*)"/$1$ESC$AT$2/gos ;
@@ -516,12 +518,12 @@ sub unesc_lout {
     s/&#0;&ugrave;/ --> /gos ;
     
     # Guess email addresses and web links.
-    s{(((http|ftp):\/\/|www\.)[-A-Za-z0-9._\/]*[A-Za-z0-9\/](\.html?)?)}
+    s{((?:(?:http|ftp):\/\/|www\.)[-A-Za-z0-9._\/]*[A-Za-z0-9\/](?:\.html?)?)}
      {<A HREF="$1">$1<\/A>}gosi ;
     s/([-A-Za-z0-9._\/]+\@[-A-Za-z0-9._\/]+)/<A HREF="mailto:$1">$1<\/A>/gosi ;
 
     # Guess images.
-    s/([-A-Za-z0-9._\/]+\.eps(?:\.(gz|z|Z))?)/[Image "$1"]/gosi ;
+    s/([-A-Za-z0-9._\/]+\.eps(?:\.(?:gz|z|Z))?)/[Image "$1"]/gosi ;
 
     $_ ;
 }
