@@ -1,4 +1,4 @@
-xxx2lout version 1.10
+xxx2lout version 1.11
 
 SUMMARY
 
@@ -28,8 +28,7 @@ html2lout (i.e. HTML/LoutParser.pm) now does tables - its very crude and
 simple and you'll probably have to hand tweak, but its a start. 
 
 lout2html is very crude - it doesn't do tables, diagrams, graphics, macros,
-definitions, etc. - but for lots of text and (untagged) lists it isn't too
-bad.
+definitions, etc. - but for lots of text and lists it isn't too bad.
 
 Even if they don't give you exactly the results you want they may be enough to
 knock your text into a usable form.
@@ -59,6 +58,8 @@ CHANGES
         pod2lout can now be used on perl scripts and modules without formality
         to produce lout from their pod alone.
 1.10    Added lout2html (suggested by David Duffy).
+1.11    Improved lout2html, now handles lout comments, and more tags. Still
+        very alpha though.
 
 
 INSTALLING

@@ -1,6 +1,6 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.10 1999/07/28 21:41:52 root Exp root $
+# $Id: Lout.pm,v 1.10 1999/07/28 21:41:52 root Exp $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
