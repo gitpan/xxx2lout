@@ -1,11 +1,9 @@
 #!/usr/bin/perl -w
 
-# $Id: html2lout,v 1.7 1999/07/14 21:36:18 root Exp root $
+# $Id: html2lout,v 1.10 1999/07/18 11:20:16 root Exp $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
-
-# Convert HTML files to Lout. 
 
 use strict ; 
 
@@ -14,20 +12,20 @@ use Lout ;
 require HTML::LoutParser ;
 
 use vars qw( $VERSION ) ;
-$VERSION         = '0.04' ;
+$VERSION         = '1.00' ;
 
-my $Html2lout ;
+my $Parser ;
 my $Wrapper      = 1 ;
 
 # main
 
 &prepare ;
-$Html2lout->start_lout if $Wrapper ;
+$Parser->start_lout if $Wrapper ;
 while( <> ) {
-    $Html2lout->parse( $_ ) ;
+    $Parser->parse( $_ ) ;
 }
-$Html2lout->eof ;
-$Html2lout->end_lout if $Wrapper ;
+$Parser->eof ;
+$Parser->end_lout if $Wrapper ;
 
 
 sub prepare {
@@ -40,7 +38,8 @@ sub prepare {
     my $SmartQuotes   = 1 ;
     my $Superscripts  = 1 ;
     my $Table         = 1 ;
-    my $TableCols     = 8 ;
+    my $TableCols     = 6 ;
+    my $NoComment     = 0 ;
 
     Getopt::Long::config 'no_ignore_case' ;
     GetOptions(
@@ -48,29 +47,34 @@ sub prepare {
         'ct|comment-tag=i'      => \$CommentTag,
         'ca|comment-attr=i'     => \$CommentAttr,
         'ic|ignore-comment=i'   => \$IgnoreComment,
+        'nc|no-comment=i'       => \$NoComment,
         'o|outfile=s'           => \$Outfile,
         'q|smartquotes=i'       => \$SmartQuotes,
         's|superscripts=i'      => \$Superscripts,
         't|table=i'             => \$Table,
         'tc|tablecols=i'        => \$TableCols,
-        'w|wrapper'             => \$Wrapper,
+        'w|wrapper=i'           => \$Wrapper,
         ) or die "\n" ;
 
-    Lout::set_txt2lout( -smart_quotes, $SmartQuotes ) ;
-    Lout::set_txt2lout( -superscripts, $Superscripts ) ;
+    Lout::set_option( -smartquotes  => $SmartQuotes ) ;
+    Lout::set_option( -superscripts => $Superscripts ) ;
 
     if( $Outfile ne 'STDOUT' ) {
         open OUT, ">$Outfile" or die "Failed to open $Outfile: $!\n" ;
         select( OUT ) ;
     }
 
-    $Html2lout = HTML::LoutParser->new(
-                        -table          => $Table,
-                        -last_table_col => chr( ord( '@' ) + $TableCols ),
-                        -comment_tag    => $CommentTag,
-                        -comment_attr   => $CommentAttr,
-                        -ignore_comment => $IgnoreComment,
-                        ) ;
+    my $filename = scalar @ARGV ? join ' ', @ARGV : '' ;
+
+    $Parser = HTML::LoutParser->new(
+                -filename       => $filename,
+                -table          => $Table,
+                -last_table_col => chr( ord( '@' ) + $TableCols ),
+                -comment_tag    => $CommentTag,
+                -comment_attr   => $CommentAttr,
+                -ignore_comment => $IgnoreComment,
+                -no_comment     => $NoComment,
+                ) ;
 }
 
 
@@ -85,23 +89,57 @@ options:
 -h    --help            Print this help screen and exit
 -ct   --comment-tag     Comment tags [1]
 -ca   --comment-attr    Comment attributes [1]
+-nc   --no-comment      Do not comment anything [0]
 -ic   --ignore-comment  Ignore comments in the source [0]
 -o F  --outfile F       Write to file F [STDOUT]
 -q    --smartquotes     Smartquotes [1]
 -s    --superscripts    Superscripts for 1st, 2nd etc [1]
 -t    --table           Convert tables [1]
--tc   --tablecols       Num of cols to use in tables [8]
+-tc   --tablecols       Num of cols to use in tables [6]
 -w    --wrapper         Wrap text in lout \@Begin..\@End [$Wrapper]
 
-Options are switched on with a 1 and off with a 0, e.g. '-s 0'. 
-NB if -ct is off then -ca will be ignored. 
-Unhandled tags are always commented.
+eg: html2lout -ct 0 -tc 5 *.html > out.lt ; lout -s out.lt > out.ps
+
+Options are switched on with a 1 and off with a 0, e.g. '-ic 1'. 
+Unhandled tags are always commented unless '-nc 1'.
 NB Table conversion will almost always need hand correction but may be
 worth using for a start; if you switch it off '-t 0' the content of
 the table will still be converted into lout so the text will be there
-for you to put in a table manually.
+for you to put in the lout table tags manually.
 __EOT__
     exit ;
 }
 
 
+__END__
+
+
+=pod SCRIPT CATEGORIES
+
+Lout
+
+=pod DESCRIPTION
+
+Converts HTML to Lout
+
+=pod PREREQUISITES
+
+Pragmas:
+
+C<strict>
+
+Modules:
+
+C<Getopt::Long>
+C<Lout>
+C<HTML::LoutParser>
+
+=pod OSNAMES
+
+Linux
+
+=pod LICENSE
+
+Same as Perl
+
+=cut

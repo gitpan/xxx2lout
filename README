@@ -1,4 +1,4 @@
-xxx2lout version 0.03
+xxx2lout version 1.00
 
 SUMMARY
 
@@ -8,20 +8,19 @@ The following little perl programs are included:
 * txt2lout  - Converts plain text to lout
 * perl2lout - Converts perl programs to lout
 
-They are supported by two modules:
+They are supported by two modules which can be used by perl programmers doing
+their own lout processing:
 * Lout.pm - this provides the txt2lout function used by the first three
-            converters, and a supporting set_txt2lout function; and
+            converters, and a supporting set_option function; it also
+            provides htmlentity2lout used by html2lout.
 * HTML/LoutParser.pm - this provides the routines for the hooks in the 
-                       HTML/Parser.pm module.
+            HTML/Parser.pm module.
 
 txt2lout can be used as a nice filter, say in vi, with ".,$!txt2lout -w 0" for
 example.
 
 html2lout (i.e. HTML/LoutParser.pm) now does tables - its very crude and
-simple and you'll probably have to hand tweak, but its a start. It doesn't
-deal with &entities; very well since it relies on HTML/Parser.pm to translate
-them and uses each 8-bit character as is; the awk html2lout converts entities
-directly into {@Char entity}'s which is what I should do.
+simple and you'll probably have to hand tweak, but its a start. 
 
 Even if they don't give you exactly the results you want they may be enough to
 knock some source text into a usable form.
@@ -37,6 +36,14 @@ CHANGES
         ensure they don't collide with preceeding words. Corrections to smart
         quotes applied. Now use Text::Wrap to wrap long lines. Added code to
         handle more tags.
+1.00    First documented version. Improved html2lout - better table handling 
+        (but still very basic). No longer puts @LP's all over the place, so
+        everything comes out better, including lists. Now &entity;'s are
+        converted to {@Char entity}'s. More options added to control
+        commenting of handled and unhandled tags. More tags handled. Parser
+        object data bugs sorted. All files now have their own pod
+        documentation.
+
 
 INSTALLING
 
@@ -54,7 +61,8 @@ then either put this directory in your PATH or create some soft links from
 somewhere on your path to the xxx2lout scripts you want.
 
 Note: You must have Perl 5.004 or later; and to use html2lout you must have
-HTML::Parser which comes in the libwww-perl library and Text::Wrap.
+HTML::Parser which comes in the libwww-perl library and Text::Wrap which comes
+with Perl.
 
 LICENCE
 
@@ -63,3 +71,4 @@ to <mark@chest.ac.uk> with 'xxx2lout' in the subject line.
 
 Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 May be used/distributed under the same terms as Perl itself.
+

@@ -1,11 +1,9 @@
 #!/usr/bin/perl -w
 
-# $Id: txt2lout,v 1.5 1999/07/11 17:15:13 root Exp $
+# $Id: txt2lout,v 1.7 1999/07/18 11:35:05 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
-
-# Convert plain text to Lout. 
 
 use strict ; 
 
@@ -14,7 +12,7 @@ use Lout ;
 
 
 use vars qw( $VERSION ) ;
-$VERSION    = '0.02' ;
+$VERSION         = '1.00' ;
 
 my $Outfile      = 'STDOUT' ;
 my $Wrapper      = 1 ;
@@ -55,8 +53,8 @@ sub process_args {
         'w|wrapper=i'       => \$Wrapper,
         ) or die "\n" ;
 
-    Lout::set_txt2lout( -smart_quotes, $SmartQuotes ) ;
-    Lout::set_txt2lout( -superscripts, $Superscripts ) ;
+    Lout::set_option( -smart_quotes => $SmartQuotes ) ;
+    Lout::set_option( -superscripts => $Superscripts ) ;
 }
 
 
@@ -101,4 +99,34 @@ __EOT__
 }
 
 
+__END__
 
+
+=pod SCRIPT CATEGORIES
+
+Lout
+
+=pod DESCRIPTION
+
+Converts plain text to Lout
+
+=pod PREREQUISITES
+
+Pragmas:
+
+C<strict>
+
+Modules:
+
+C<Getopt::Long>
+C<Lout>
+
+=pod OSNAMES
+
+Linux
+
+=pod LICENSE
+
+Same as Perl
+
+=cut
