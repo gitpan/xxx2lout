@@ -1,4 +1,4 @@
-xxx2lout version 1.02
+xxx2lout version 1.10
 
 SUMMARY
 
@@ -8,11 +8,16 @@ The following little perl programs are included:
 * txt2lout  - Converts plain text to lout
 * perl2lout - Converts perl programs to lout
 
+NEW
+* lout2html - Converts a subset of lout to HTML (alpha!)
+
+
 They are supported by two modules which can be used by perl programmers doing
 their own lout processing:
 * Lout.pm - this provides the txt2lout function used by the first three
             converters, and a supporting set_option function; it also
-            provides htmlentity2lout used by html2lout.
+            provides htmlentity2lout used by html2lout. Its also used by
+            lout2html.
 * HTML/LoutParser.pm - this provides the routines for the hooks in the 
             HTML/Parser.pm module.
 
@@ -22,8 +27,12 @@ example.
 html2lout (i.e. HTML/LoutParser.pm) now does tables - its very crude and
 simple and you'll probably have to hand tweak, but its a start. 
 
+lout2html is very crude - it doesn't do tables, diagrams, graphics, macros,
+definitions, etc. - but for lots of text and (untagged) lists it isn't too
+bad.
+
 Even if they don't give you exactly the results you want they may be enough to
-knock some source text into a usable form.
+knock your text into a usable form.
 
 CHANGES
 
@@ -49,6 +58,7 @@ CHANGES
 1.02    Added non-standard tags =title, =head3 and =head4 to pod2lout.
         pod2lout can now be used on perl scripts and modules without formality
         to produce lout from their pod alone.
+1.10    Added lout2html (suggested by David Duffy).
 
 
 INSTALLING
@@ -67,13 +77,14 @@ then either put this directory in your PATH or create some soft links from
 somewhere on your path to the xxx2lout scripts you want.
 
 Note: You must have Perl 5.004 or later; and to use html2lout you must have
-HTML::Parser which comes in the libwww-perl library and Text::Wrap which comes
-with Perl.
+HTML::Parser and to use lout2html you must have HTML::Entities both of which
+come in the libwww-perl library; you'll also need Text::Wrap which comes with
+Perl.
 
 LICENCE
 
 These are quick scripts, but if you have comments, improvements etc send them
-to <mark@chest.ac.uk> with 'xxx2lout' in the subject line.
+to <summer@chest.ac.uk> with 'xxx2lout' in the subject line.
 
 Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 May be used/distributed under the same terms as Perl itself.

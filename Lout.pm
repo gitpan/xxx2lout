@@ -1,6 +1,6 @@
 package Lout ; # Documented at the __END__.
 
-# $Id: Lout.pm,v 1.7 1999/07/18 11:20:26 root Exp $
+# $Id: Lout.pm,v 1.10 1999/07/28 21:41:52 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -8,8 +8,8 @@ package Lout ; # Documented at the __END__.
 
 use strict ; 
 
-use vars qw( $VERSION ) ;
-$VERSION    = '1.00' ;
+use vars qw( $VERSION %Entity2char ) ;
+$VERSION    = '1.01' ;
 
 
 my %option = (
@@ -22,7 +22,7 @@ my %option = (
 # This hash (and most of its comments) is copied from Gisle Aas
 # HTML::Entities.pm module with the plain text characters being replaced by
 # their Lout equivalents.
-my %Entity2char = (
+%Entity2char = (
     # Some normal chars that have special meaning in SGML context
     amp     => '&',     # Note we convert & to "&" later. # ampersand 
     'gt'    => '>',     # greater than
@@ -219,7 +219,7 @@ sub txt2lout {
         s/$PARA/\n/go ;
     }
     else {
-        s/$PARA/\n\@LP\n/go ;
+        s/$PARA/\n\@PP\n/go ;
     }
     s/$AT/"@"/go ;
     s/$LBRACE/{/go ;
@@ -333,6 +333,9 @@ None that I know of!
 =head1 CHANGES
 
 1999/07/18  First properly documented release. 
+
+1999/07/28  Put %Entity2char in the symbol table so that other perl programs
+            can access it, for example lout2html.
 
 =head1 AUTHOR
 

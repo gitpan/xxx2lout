@@ -1,6 +1,6 @@
 package HTML::LoutParser ; # Documented at the __END__.
 
-# $Id: LoutParser.pm,v 1.22 1999/07/24 08:46:08 root Exp $
+# $Id: LoutParser.pm,v 1.23 1999/07/25 14:32:37 root Exp $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -323,7 +323,7 @@ sub end {
 
     CASE : {
         if( $tag eq 'p' ) {
-            # We ignore this - we put in a @LP at <P> tags.
+            # We ignore this - we put in a @PP at <P> tags.
             last CASE ;
         }
         if( $tag eq 'head' or

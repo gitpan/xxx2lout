@@ -3,7 +3,7 @@
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
 
-# $Id: perl2lout,v 1.6 1999/07/25 08:51:52 root Exp root $
+# $Id: perl2lout,v 1.6 1999/07/25 08:51:52 root Exp $
 
 use strict ;
 

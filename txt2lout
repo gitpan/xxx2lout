@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: txt2lout,v 1.7 1999/07/18 11:35:05 root Exp $
+# $Id: txt2lout,v 1.10 1999/07/25 16:01:58 root Exp $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -12,12 +12,13 @@ use Lout ;
 
 
 use vars qw( $VERSION ) ;
-$VERSION         = '1.00' ;
+$VERSION         = '1.01' ;
 
 my $Outfile      = 'STDOUT' ;
 my $Wrapper      = 1 ;
 my $SmartQuotes  = 1 ;
 my $Superscripts = 1 ;
+my $ExtraSpace   = 0 ;
 
 # main
 
@@ -32,7 +33,7 @@ if( $Outfile ne 'STDOUT' ) {
 while( <> ) {
     if( /^\s*$/o ) {
         # Paragraphs separated by blank lines.
-        print "\@LP\n" ;
+        print "\@PP\n$ExtraSpace" ;
     }
     else {
         print Lout::txt2lout( $_ ) ;
@@ -47,6 +48,7 @@ sub process_args {
     Getopt::Long::config 'no_ignore_case' ;
     GetOptions(
         'h|help'            => \&help,
+        'e|extraspace=i'    => \$ExtraSpace,
         'o|outfile=s'       => \$Outfile,
         'q|smartquotes=i'   => \$SmartQuotes,
         's|superscripts=i'  => \$Superscripts,
@@ -55,6 +57,8 @@ sub process_args {
 
     Lout::set_option( -smart_quotes => $SmartQuotes ) ;
     Lout::set_option( -superscripts => $Superscripts ) ;
+
+    $ExtraSpace = $ExtraSpace ? "\n" : '' ;
 }
 
 
@@ -67,10 +71,17 @@ usage: txt2lout [options] <files>
 
 options:
 -h    --help          Print this help screen and exit
+-e    --extraspace    Print blank lines between paras [$ExtraSpace]
 -o F  --outfile F     Write to file F [$Outfile]
 -q    --smartquotes   Smartquotes [$SmartQuotes]
 -s    --superscripts  Superscripts for 1st, 2nd etc [$Superscripts]
 -w    --wrapper       Wrap text in lout \@Begin..\@End [$Wrapper]
+
+The -e option is useful for troff and tex spacing.
+e.g. for use in an editor like vim:
+    .,\$!txt2lout -w 0 -e 1
+e.g. from the command line:
+    txt2lout file.txt > file.lt ; lout -s file.lt > file.ps
 __EOT__
     exit ;
 }
