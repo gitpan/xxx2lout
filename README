@@ -1,4 +1,4 @@
-xxx2lout version 0.02
+xxx2lout version 0.03
 
 SUMMARY
 
@@ -32,6 +32,11 @@ CHANGES
 0.02    Added some code to handle html tables in html2lout; also made
         LoutParser a first class object with some parameters to influence
         its behaviour.
+0.03    Improved html2lout - if multiple fonts given, choses just the last one
+        and inserts Base. Insert empty objects {} in front of @B, @I etc to
+        ensure they don't collide with preceeding words. Corrections to smart
+        quotes applied. Now use Text::Wrap to wrap long lines. Added code to
+        handle more tags.
 
 INSTALLING
 
@@ -49,7 +54,7 @@ then either put this directory in your PATH or create some soft links from
 somewhere on your path to the xxx2lout scripts you want.
 
 Note: You must have Perl 5.004 or later; and to use html2lout you must have
-HTML::Parser which comes in the libwww-perl library.
+HTML::Parser which comes in the libwww-perl library and Text::Wrap.
 
 LICENCE
 

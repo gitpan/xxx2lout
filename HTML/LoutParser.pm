@@ -1,6 +1,6 @@
 package HTML::LoutParser ;
 
-# $Id: LoutParser.pm,v 1.13 1999/07/12 21:19:51 root Exp root $
+# $Id: LoutParser.pm,v 1.14 1999/07/14 21:36:08 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -14,9 +14,10 @@ package HTML::LoutParser ;
 
 require HTML::Parser ;
 use Lout ;
+use Text::Wrap ;
 
 use vars qw( $VERSION @ISA ) ;
-$VERSION = '0.02' ;
+$VERSION = '0.03' ;
 
 @ISA = qw( HTML::Parser ) ;
 
@@ -31,7 +32,7 @@ sub new {
     my $self  = $class->SUPER::new ;
     my %arg   = (
                     -comment_attr   => 1,
-                    -comment_tag    => 1,
+                    -comment_tag    => 1, # We always comment unhandled tags.
                     -ignore_comment => 0,
                     -last_table_col => 'H',
                     -table          => 1,
@@ -45,8 +46,8 @@ sub new {
                                           $self->{-last_table_col} lt 'Z' ;
     }
     $self->{-table}          = $arg{-table} ;
+    $self->{-comment_tag}    = $arg{-comment_tag} ;
     $self->{-comment_attr}   = $arg{-comment_attr} ;
-    $self->{-comment_tag}    = $arg{-comment_tag} || $self->{-comment_attr} ;
     $self->{-ignore_comment} = $arg{-ignore_comment} ;
 
     $self ;
@@ -92,7 +93,7 @@ sub _to_comment {
 sub text {
     my( $self, $text ) = @_ ;
     
-    print Lout::txt2lout( HTML::Entities::decode( $text ) ) ;
+    print Lout::txt2lout( HTML::Entities::decode( wrap( '', '', $text ) ) ) ;
 }
 
 
@@ -117,17 +118,33 @@ sub start {
     my $default = 0 ;
 
     CASE : {
+        if( $tag eq 'html' or
+            $tag eq 'head' or
+            $tag eq 'body' or
+            $tag =~ /d[lt]/o
+            ) {
+            # No action required.
+            last CASE ;
+        }
         if( $tag eq 'img' ) {
             my $alt = $$attr{'alt'} ;
             print $self->_to_comment( "Image $alt" ) if defined $alt ;
             last CASE ;
         }
+        if( $tag eq 'blockquote' ) {
+            print "\n\@QuotedDisplay {" ;
+            last CASE ;
+        }
+        if( $tag eq 'dd' ) {
+            print "\n\@IndentedDisplay {" ;
+            last CASE ;
+        }
         if( $tag eq 'hr' ) {
-            print "\@LLP \@FullWidthRule \@LLP\n" ;
+            print "\n\@LLP \@FullWidthRule \@LLP\n" ;
             last CASE ;
         }
         if( $tag eq 'title' ) {
-            print "\@CentredDisplay { Bold +5p } \@Font {" ;
+            print "\n\@CentredDisplay { Bold +5p } \@Font {" ;
             last CASE ;
         }
         if( $tag eq 'center' ) {
@@ -140,62 +157,63 @@ sub start {
         }
         if( $tag eq 'b' or 
             $tag eq 'strong' ) {
-            print "\@B {" ;
+            print "{}\@B {" ;
             last CASE ;
         }
         if( $tag eq 'i' or 
+            $tag eq 'cite' or
             $tag =~ /^em(phasis)?$/o ) {
-            print "\@I {" ;
+            print "{}\@I {" ;
             last CASE ;
         }
         if( $tag =~ /^[au]$/o ) {
             my $name = $$attr{'name'} || '' ;
-            print "\@Underline {$name" ;
+            print "{}\@Underline {$name" ;
             last CASE ;
         }
         if( $tag eq 'sup' ) {
-            print "\@Sup {" ;
+            print "{}\@Sup {" ;
             last CASE ;
         }
         if( $tag eq 'sub' ) {
-            print "\@Sub {" ;
+            print "{}\@Sub {" ;
             last CASE ;
         }
         if( $tag eq 'kbd' or 
             $tag eq 'tt'  or 
             $tag eq 'code' ) {
-            print "\@F {" ;
+            print "{}\@F {" ;
             last CASE ;
         }
         if( $tag =~ /^h([1-6])$/o ) {
             my $level = $1 ;
             my( $sign, $size ) = $level > 4 ? 
                 ( "-" , $level - 4 ) : ( "+" , 5 - $level ) ;
-            print "\@CentredDisplay { Bold $sign${size}p } \@Font {" ;
+            print "\n\@CentredDisplay { Bold $sign${size}p } \@Font {" ;
             last CASE ;
         }
         if( $tag eq 'ol' ) {
             my $type = $$attr{'type'} || '1' ;
             if( $type eq 'a' ) {
-                print "\@AlphaList\n" ;
+                print "\n\@AlphaList\n" ;
             }
             elsif( $type eq 'i' ) {
-                print "\@RomanList\n" ;
+                print "\n\@RomanList\n" ;
             }
             elsif( $type eq 'A' ) {
-                print "\@UCAlphaList\n" ;
+                print "\n\@UCAlphaList\n" ;
             }
             elsif( $type eq 'I' ) {
-                print "\@UCRomanList\n" ;
+                print "\n\@UCRomanList\n" ;
             }
             else {
-                print "\@NumberedList\n" ;
+                print "\n\@NumberedList\n" ;
             }
             push @List, 0 ;
             last CASE ;
         }
         if( $tag eq 'ul' ) {
-            print "\@BulletList\n" ;
+            print "\n\@BulletList\n" ;
             push @List, 0 ;
             last CASE ;
         }
@@ -204,21 +222,23 @@ sub start {
                 print "}\n" ;
                 $List[$#List]-- ;
             }
-            print "\@ListItem {" ;
+            print "\n\@ListItem {" ;
             $List[$#List]++ ;
             last CASE ;
         }
         if( $tag eq 'p' ) {
             # BUG We fail to take account of paragraph alignments.
-            print "\@LP\n" ;
+            print "\n\@LP\n" ;
             last CASE ;
         }
         if( $tag eq 'br' ) {
-            print "\@LLP\n" ;
+            print "\n\@LLP\n" ;
             last CASE ;
         }
         if( $tag eq 'font' ) {
             my $name  = $$attr{'face'}  || '' ;
+            $name =~ /([^,\s]+)$/o ; # Select last face if several.
+            $name = $1 if $1 ;
             $name = 'Helvetica' if $name eq 'sans-serif' ;
             $name = 'Times'     if $name eq 'serif' ;
             my $size  = $$attr{'size'}  || '' ;
@@ -227,12 +247,12 @@ sub start {
                 $sign = $1 ;
                 $size = $2 ;
             }
-            print "{ $name $sign${size}p } \@Font {" ;
+            print "{ $name Base $sign${size}p } \@Font {" ;
             last CASE ;
         }
         if( $self->{-table} and $tag eq 'table' ) {
             # BUG All attributes are ignored.
-            print "\@Tbl\n  rule { yes }\n{\n" ;
+            print "\n\@Tbl\n  rule { yes }\n{\n" ;
             last CASE ;
         }
         if( $self->{-table} and $tag eq 'tr' ) {
@@ -258,8 +278,8 @@ sub start {
             last CASE ;
         }
         DEFAULT : {
-            print $self->_to_comment( "start $tag" . 
-                  $self->_show_attributes( $attr ) ) if $self->{-comment_tag} ;
+            print $self->_to_comment( "unhandled start $tag" . 
+                  $self->_show_attributes( $attr ) ) ;
             $default = 1 ;
             last CASE ;
         }
@@ -297,6 +317,15 @@ sub end {
             # We ignore this - we put in a @LP at <P> tags.
             last CASE ;
         }
+        if( $tag eq 'head' or
+            $tag eq 'body' or
+            $tag eq 'html' or
+            $tag eq 'li'   or
+            $tag =~ /d[lt]/o
+            ) {
+            # No action required.
+            last CASE ;
+        }
         if( $tag eq 'center'         or 
             $tag eq 'pre'            or
             $tag =~ /^[abiu]$/o      or 
@@ -305,9 +334,12 @@ sub end {
             $tag =~ /^em(phasis)?$/o or
             $tag eq 'kbd'            or 
             $tag eq 'tt'             or 
+            $tag eq 'dd'             or 
             $tag eq 'code'           or
             $tag =~ /^h[1-6]$/o      or 
             $tag eq 'font'           or
+            $tag eq 'cite'           or
+            $tag eq 'blockquote'     or
             $tag eq 'title'
             ) {
             print "}\n" ;
@@ -336,11 +368,11 @@ sub end {
             }
             warn "Invalid list\n" if $List[$#List] != 0 ;
             pop @List ;
-            print "\@EndList\n" ;
+            print "\n\@EndList\n" ;
             last CASE ;
         }
         DEFAULT : {
-            print $self->_to_comment( "end " . $tag ) if $self->{-comment_tag} ; 
+            print $self->_to_comment( "unhandled end " . $tag ) ;
             $default = 1 ;
             last CASE ;
         }

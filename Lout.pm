@@ -1,6 +1,6 @@
 package Lout ;
 
-# $Id: Lout.pm,v 1.2 1999/07/11 17:07:37 root Exp root $
+# $Id: Lout.pm,v 1.3 1999/07/14 21:35:58 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -60,12 +60,12 @@ sub txt2lout {
         s/\'(s?\W)/$QRIGHT$1/go ;
         s/(\W)\'/$1$QLEFT/go ;
         s/^\'/$QLEFT/go ;
-        s/([\]\)\}>])$QLEFT/$1$QRIGHT/go ;
+        s/([\]\)\}>!?.,;:])$QLEFT/$1$QRIGHT/go ;
         s/(\W)"/$1``/go ;
         s/^"/``/go ;
         s/"(\W)/''$1/go ;
         s/"$/''/go ;
-        s/([\]\)\}>])``/$1''/go ;
+        s/([\]\)\}>!?.,;:])``/$1''/go ;
     }
 
     # Special characters

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: html2lout,v 1.6 1999/07/12 21:20:01 root Exp root $
+# $Id: html2lout,v 1.7 1999/07/14 21:36:18 root Exp root $
 
 # Copyright (c) 1999 Mark Summerfield. All Rights Reserved.
 # May be used/distributed under the same terms as Perl itself.
@@ -94,7 +94,8 @@ options:
 -w    --wrapper         Wrap text in lout \@Begin..\@End [$Wrapper]
 
 Options are switched on with a 1 and off with a 0, e.g. '-s 0'. 
-NB if -ca is on then -ct will be on.
+NB if -ct is off then -ca will be ignored. 
+Unhandled tags are always commented.
 NB Table conversion will almost always need hand correction but may be
 worth using for a start; if you switch it off '-t 0' the content of
 the table will still be converted into lout so the text will be there
